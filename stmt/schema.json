@@ -1,0 +1,141 @@
+[
+  {
+    "table": "services",
+    "columns": [
+      "id",
+      "uid",
+      "publisher_id",
+      "name",
+      "homepage",
+      "description",
+      "functionality",
+      "created_at",
+      "updated_at"
+    ]
+  },
+  {
+    "table": "channels",
+    "columns": [
+      "id",
+      "uid",
+      "name",
+      "created_at"
+    ]
+  },
+  {
+    "table": "publishers",
+    "columns": [
+      "id",
+      "uid",
+      "name",
+      "homepage",
+      "description",
+      "created_at",
+      "updated_at",
+      "email",
+      "industry_name",
+      "founded_date",
+      "financing_events",
+      "name_tokens"
+    ]
+  },
+  {
+    "table": "products",
+    "columns": [
+      "id",
+      "uid",
+      "publisher_id",
+      "channel_id",
+      "platform",
+      "bundle_id",
+      "name",
+      "text",
+      "homepage",
+      "description",
+      "logo_url",
+      "screenshot_urls",
+      "discontinued",
+      "extra",
+      "created_at",
+      "updated_at",
+      "countries"
+    ]
+  },
+  {
+    "table": "products_stats",
+    "columns": [
+      "id",
+      "name",
+      "logo_url",
+      "uid",
+      "extra",
+      "publisher_name",
+      "publisher_uid",
+      "channel_uid",
+      "country",
+      "tags",
+      "downloads",
+      "paid",
+      "name_tokens"
+    ]
+  },
+  {
+    "table": "products_query_stats",
+    "columns": [
+      "id",
+      "name",
+      "bundle_id",
+      "publisher_name",
+      "downloads_sum",
+      "services_count",
+      "paid",
+      "services_uids",
+      "channel_uid",
+      "tags",
+      "countries",
+      "name_tokens"
+    ]
+  },
+  {
+    "table": "products_query_stats_tmp",
+    "columns": [
+      "id",
+      "name",
+      "bundle_id",
+      "publisher_name",
+      "downloads_sum",
+      "services_count",
+      "paid",
+      "services_uids",
+      "channel_uid",
+      "tags",
+      "countries",
+      "name_tokens"
+    ]
+  },
+  {
+    "table": "services_stats",
+    "columns": [
+      "id",
+      "title",
+      "uid",
+      "channel_uid",
+      "country",
+      "product_count",
+      "downloads",
+      "name_tokens"
+    ]
+  },
+  {
+    "table": "download_counts",
+    "columns": [
+      "channel_id",
+      "product_id",
+      "country_code",
+      "year",
+      "month",
+      "count",
+      "created_at"
+    ]
+  }
+]
