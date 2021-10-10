@@ -1,5 +1,16 @@
 # go-sql-stmt
 
+[TOC]
+
+## What
+sql-stmt库是使用go函数来构建sql语句。
+
+类似的项目有: 
+- https://github.com/huandu/go-sqlbuilder
+- https://github.com/knex/knex
+
+sql-stmt在使用上更加方便，文法更接近原生的sql。通过If语句也可以现实条件生成sql语句。
+
 ## Example
 
 `stmt/node_test.go`
@@ -21,7 +32,7 @@
 }]
 ```
 
-如果schema.json在当前路径，直接运行schema-generator
+如果schema.json在当前路径，直接运行schema-generator （`go install github.com/fork-ai/go-sql-stmt`）
 
 ```go
 //go:generate schema-generator
@@ -145,7 +156,7 @@ LIMIT %d OFFSET %d`)
 }
 ```
 
-下载使用sql-stmt来重构这段代码
+下面使用sql-stmt来重构这段代码
 
 ```go
 package main
@@ -213,7 +224,47 @@ If(c1, node1).
     ElseIf(c3, node3).
     Else()
 ```
-
 ## 构造出来的sql是安全的吗？
 
 字符串是引起sql注入的原因。因此在处理字符串时，我们会使用变量占位的方式。而其它类型如整数则在在构造sql时就直接生成了。理论上来讲，是安全的。
+
+## Reference
+
+### Select
+
+#### Column
+
+#### Window Function
+
+#### Scalar Function
+
+#### Json Operator
+
+#### Agg Function
+
+### From
+
+#### Table Alias
+```
+var ps = ProductsStats.Alias("ps")
+Select(
+    ps.Id,
+).From(ps)
+```
+#### Join
+
+### Where
+
+#### Logical Operator
+
+### Order By
+
+### Group By
+
+### Limit && Offset
+
+### Union
+
+### Explain
+
+### If Stmt
