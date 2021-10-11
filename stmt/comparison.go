@@ -7,7 +7,7 @@ type comparisonOperator struct {
 
 func NewComparisonOperator(op string) func(l, r node) *comparisonOperator {
 	return func(l, r node) *comparisonOperator {
-		return &comparisonOperator{op: op, l: l, r: r}
+		return &comparisonOperator{op: op, l: ibracket(l), r: ibracket(r)}
 	}
 }
 

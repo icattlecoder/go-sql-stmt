@@ -30,7 +30,7 @@ func (t Column) JsonField(f string) node {
 	return &jsonOperator{
 		c:  t,
 		op: "->>",
-		r:  String("'" + f + "'"),
+		r:  rawString("'" + f + "'"),
 	}
 }
 

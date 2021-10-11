@@ -17,6 +17,7 @@ sql-stmt在使用上更加方便，文法更接近原生的sql。通过If语句�
 
 ## 定义 Schema
 
+使用sql-stmt的第一步是定义Schema，Schema是一个结构体，它的成员字段表示数据库的列。
 可以根据json格式的schema定义来生成go struct
 
 ```javascript
@@ -232,7 +233,12 @@ If(c1, node1).
 
 ### Select
 
+Select子句接受变长的参数，一般是Column，也可以Select子句。
+
 #### Column
+
+Column表示数据库的列，一般不会直接使用它，而是引用Schema生成的struct。
+Column对像
 
 #### Window Function
 

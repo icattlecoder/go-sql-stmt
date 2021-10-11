@@ -220,6 +220,36 @@ AND products_stats.paid = FALSE
 AND products_stats.extra->>'track_id' = %s LIMIT 100`,
 			wantValues: []interface{}{"mi", "CN", "abc"},
 		},
+		{
+			name: "arithmetic function",
+			clause: Select(
+				DownloadCounts.Year,
+				DownloadCounts.Month,
+				DownloadCounts.Count,
+			).
+				From(DownloadCounts).
+				Where(
+					DownloadCounts.ChannelId.EqInt(2),
+					DownloadCounts.ProductId.EqInt(74831),
+					Equals(
+						DownloadCounts.Year.Multi(Int(100)).Plus(DownloadCounts.Month),
+						Select(Max(DownloadCounts.Year.Multi(Int(100)).Plus(DownloadCounts.Month))).
+							From(DownloadCounts).
+							Where(
+								DownloadCounts.ChannelId.EqInt(2),
+								DownloadCounts.ProductId.EqInt(74831),
+							),
+					),
+				),
+			wantQuery: `SELECT 
+download_counts.year, 
+download_counts.month, 
+download_counts.count FROM download_counts 
+WHERE download_counts.channel_id = %s 
+AND download_counts.product_id = %s 
+AND download_counts.year*(100)+(download_counts.month) = (SELECT MAX(download_counts.year*(100)+(download_counts.month)) FROM download_counts WHERE download_counts.channel_id = %s AND download_counts.product_id = %s)`,
+			wantValues: []interface{}{2, 74831, 2, 74831},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

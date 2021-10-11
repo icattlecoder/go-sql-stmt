@@ -253,7 +253,7 @@ func (c *clause) Union(c2 *clause) *setOperator {
 
 	setOp := &setOperator{
 		operator: "UNION",
-		source:   c,
+		source:   &bracket{c},
 	}
 	setOp.Union(c2)
 	setOp.clause = &clause{
@@ -346,4 +346,25 @@ func (n *not) SqlString() string {
 	sb.WriteString(n.node.SqlString())
 	sb.WriteString(")")
 	return sb.String()
+}
+
+type bracket struct {
+	node
+}
+
+func (b *bracket) Values() []interface{} {
+	return getValues(b.node).Values()
+}
+
+func ibracket(n node) node {
+	switch n.(type) {
+	case *clause:
+		return &bracket{node: n}
+	default:
+		return n
+	}
+}
+
+func (b *bracket) SqlString() string {
+	return "(" + b.node.SqlString() + ")"
 }
