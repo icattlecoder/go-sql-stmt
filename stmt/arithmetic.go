@@ -2,7 +2,7 @@ package stmt
 
 type arithmeticOperator struct {
 	op     string
-	source node
+	source Node
 	items  []*arithmeticOperator
 }
 
@@ -20,7 +20,7 @@ func (a *arithmeticOperator) SqlString() string {
 	return sb.String()
 }
 
-func (a *arithmeticOperator) Plus(n node) *arithmeticOperator {
+func (a *arithmeticOperator) Plus(n Node) *arithmeticOperator {
 	a.items = append(a.items, &arithmeticOperator{
 		op:     "+",
 		source: n,
@@ -28,7 +28,7 @@ func (a *arithmeticOperator) Plus(n node) *arithmeticOperator {
 	return a
 }
 
-func (a *arithmeticOperator) Minus(n node) *arithmeticOperator {
+func (a *arithmeticOperator) Minus(n Node) *arithmeticOperator {
 	a.items = append(a.items, &arithmeticOperator{
 		op:     "-",
 		source: n,
@@ -36,7 +36,7 @@ func (a *arithmeticOperator) Minus(n node) *arithmeticOperator {
 	return a
 }
 
-func (a *arithmeticOperator) Mult(n node) *arithmeticOperator {
+func (a *arithmeticOperator) Mult(n Node) *arithmeticOperator {
 	a.items = append(a.items, &arithmeticOperator{
 		op:     "*",
 		source: n,
@@ -44,7 +44,7 @@ func (a *arithmeticOperator) Mult(n node) *arithmeticOperator {
 	return a
 }
 
-func (a *arithmeticOperator) Div(n node) *arithmeticOperator {
+func (a *arithmeticOperator) Div(n Node) *arithmeticOperator {
 	a.items = append(a.items, &arithmeticOperator{
 		op:     "/",
 		source: n,

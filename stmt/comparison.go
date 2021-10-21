@@ -2,11 +2,11 @@ package stmt
 
 type comparisonOperator struct {
 	op   string
-	l, r node
+	l, r Node
 }
 
-func NewComparisonOperator(op string) func(l, r node) *comparisonOperator {
-	return func(l, r node) *comparisonOperator {
+func NewComparisonOperator(op string) func(l, r Node) *comparisonOperator {
+	return func(l, r Node) *comparisonOperator {
 		return &comparisonOperator{op: op, l: ibracket(l), r: ibracket(r)}
 	}
 }

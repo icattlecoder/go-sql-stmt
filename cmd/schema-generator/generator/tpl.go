@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -45,9 +46,39 @@ func init() {
 	tpl = tpl1
 }
 
+type Column struct {
+	Name     string `json:"name"`
+	Sortable bool   `json:"sortable,omitempty"`
+}
+
 type table struct {
-	TableName string   `json:"table"`
-	Columns   []string `json:"columns"`
+	TableName   string   `json:"table"`
+	HasSortable bool     `json:"-"`
+	Columns     []Column `json:"columns"`
+}
+
+func (t *table) preDo() {
+
+	for _, c := range t.Columns {
+		if c.Sortable {
+			t.HasSortable = true
+			break
+		}
+	}
+}
+
+type tables []table
+
+func (t tables) Len() int {
+	return len(t)
+}
+
+func (t tables) Less(i, j int) bool {
+	return t[i].TableName < t[j].TableName
+}
+
+func (t tables) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
 }
 
 func GenerateFromSchema(pkg string, i, o string) error {
@@ -61,6 +92,7 @@ func GenerateFromSchema(pkg string, i, o string) error {
 	if err := json.Unmarshal(bs, &tables); err != nil {
 		return err
 	}
+
 	code, err := generate(pkg, tables)
 	if err != nil {
 		return err
@@ -68,12 +100,16 @@ func GenerateFromSchema(pkg string, i, o string) error {
 	return ioutil.WriteFile(o, []byte(code), 0664)
 }
 
-func generate(pkg string, tables []table) (string, error) {
+func generate(pkg string, tables tables) (string, error) {
 
+	sort.Sort(tables)
+	for i := range tables {
+		tables[i].preDo()
+	}
 	data := map[string]interface{}{
 		"stmtPkgName": "",
-		"package": pkg,
-		"tables":  tables,
+		"package":     pkg,
+		"tables":      tables,
 	}
 
 	buff := bytes.Buffer{}

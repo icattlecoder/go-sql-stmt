@@ -4,8 +4,8 @@ type joinPredicate struct {
 	*baseClause
 
 	typ    string
-	source node
-	on     []node
+	source Node
+	on     []Node
 }
 
 func (j *joinPredicate) Values() []interface{} {
@@ -35,12 +35,12 @@ func (j *joinPredicate) SqlString() string {
 	return sb.String()
 }
 
-func (j *joinPredicate) On(cond ...node) *joinPredicate {
+func (j *joinPredicate) On(cond ...Node) *joinPredicate {
 	j.on = cond
 	return j
 }
 
-func LeftJoin(source node) *joinPredicate {
+func LeftJoin(source Node) *joinPredicate {
 
 	return &joinPredicate{
 		typ:    "LEFT JOIN",
@@ -48,7 +48,7 @@ func LeftJoin(source node) *joinPredicate {
 	}
 }
 
-func Join(source node) *joinPredicate {
+func Join(source Node) *joinPredicate {
 
 	return &joinPredicate{
 		typ:    "JOIN",

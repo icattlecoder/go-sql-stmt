@@ -250,6 +250,22 @@ AND download_counts.product_id = %s
 AND download_counts.year*(100)+(download_counts.month) = (SELECT MAX(download_counts.year*(100)+(download_counts.month)) FROM download_counts WHERE download_counts.channel_id = %s AND download_counts.product_id = %s)`,
 			wantValues: []interface{}{2, 74831, 2, 74831},
 		},
+		{
+			name: "in predicate",
+			clause: Select(
+				DownloadCounts.Year,
+			).
+				From(DownloadCounts).
+				Where(
+					DownloadCounts.ChannelId.InInt(1, 2, 3),
+					DownloadCounts.Year.InString("2010", "2011"),
+				),
+			wantQuery: `SELECT 
+download_counts.year 
+FROM download_counts 
+WHERE download_counts.channel_id IN (%s,%s,%s) AND download_counts.year IN (%s,%s)`,
+			wantValues: []interface{}{1, 2, 3,"2010","2011"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

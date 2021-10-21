@@ -2,7 +2,7 @@ package stmt
 
 type logicalOperator struct {
 	op    string
-	items []node
+	items []Node
 }
 
 func (l *logicalOperator) SqlString() string {
@@ -24,14 +24,14 @@ func (l *logicalOperator) Values() []interface{} {
 	return getValues(l.items...).Values()
 }
 
-func And(items ...node) *logicalOperator {
+func And(items ...Node) *logicalOperator {
 	return &logicalOperator{
 		op:    " AND ",
 		items: items,
 	}
 }
 
-func Or(items ...node) *logicalOperator {
+func Or(items ...Node) *logicalOperator {
 	return &logicalOperator{
 		op:    " OR ",
 		items: items,

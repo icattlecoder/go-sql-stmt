@@ -9,7 +9,7 @@ import (
 
 type baseClause struct {
 	label string
-	nodes []node
+	nodes []Node
 	split string
 	valueNode
 }
@@ -18,7 +18,7 @@ func (b *baseClause) Values() []interface{} {
 	return getValues(b.nodes...).Values()
 }
 
-func newBaseClause(l string, nodes ...node) *baseClause {
+func newBaseClause(l string, nodes ...Node) *baseClause {
 	nodes = notNilNodes(nodes)
 	return &baseClause{
 		label:     l,
@@ -67,7 +67,7 @@ type clause struct {
 
 type from struct {
 	joins   []*joinPredicate
-	sources node
+	sources Node
 }
 
 func (f *from) Values() []interface{} {
@@ -102,13 +102,13 @@ func (l *limitOffset) SqlString() string {
 	return l.label + fmt.Sprintf(" %d", l.val)
 }
 
-func Select(n ...node) *clause {
+func Select(n ...Node) *clause {
 	return &clause{
 		_select: newBaseClause("SELECT", n...),
 	}
 }
 
-func (c *clause) From(sources ...node) *clause {
+func (c *clause) From(sources ...Node) *clause {
 
 	var js []*joinPredicate
 	//FIXME panic
@@ -132,22 +132,22 @@ func (c *clause) From(sources ...node) *clause {
 	return c
 }
 
-func (c *clause) Where(n ...node) *clause {
+func (c *clause) Where(n ...Node) *clause {
 	c.where = newBaseClause("WHERE", n...).setSplit(" AND ")
 	return c
 }
 
-func (c *clause) OrderBy(n ...node) *clause {
+func (c *clause) OrderBy(n ...Node) *clause {
 	c.orderBy = newBaseClause("ORDER BY", n...)
 	return c
 }
 
-func (c *clause) GroupBy(n ...node) *clause {
+func (c *clause) GroupBy(n ...Node) *clause {
 	c.orderBy = newBaseClause("GROUP BY", n...)
 	return c
 }
 
-func (c *clause) Having(n ...node) *clause {
+func (c *clause) Having(n ...Node) *clause {
 	c.having = newBaseClause("HAVING BY", n...)
 	return c
 }
@@ -186,7 +186,7 @@ func (c *clause) SqlString() string {
 	sb := get()
 	defer put(sb)
 
-	var bs []node
+	var bs []Node
 	if c.explain != nil {
 		bs = append(bs, c.explain)
 	}
@@ -302,28 +302,28 @@ func (e *explain) SqlString() string {
 
 type orderDirection struct {
 	dir string
-	node
+	Node
 }
 
 func (o *orderDirection) SqlString() string {
-	return o.node.SqlString() + " " + o.dir
+	return o.Node.SqlString() + " " + o.dir
 }
 
-func Asc(n node) *orderDirection {
+func Asc(n Node) *orderDirection {
 	return &orderDirection{
 		dir:  "ASC",
-		node: n,
+		Node: n,
 	}
 }
 
-func Desc(n node) *orderDirection {
+func Desc(n Node) *orderDirection {
 	return &orderDirection{
 		dir:  "DESC",
-		node: n,
+		Node: n,
 	}
 }
 
-func SortDir(desc bool, n node) *orderDirection {
+func SortDir(desc bool, n Node) *orderDirection {
 	if desc {
 		return Desc(n)
 	}
@@ -331,11 +331,11 @@ func SortDir(desc bool, n node) *orderDirection {
 }
 
 type not struct {
-	node
+	Node
 }
 
-func Not(n node) *not {
-	return &not{node: n}
+func Not(n Node) *not {
+	return &not{Node: n}
 }
 
 func (n *not) SqlString() string {
@@ -343,28 +343,28 @@ func (n *not) SqlString() string {
 	defer put(sb)
 
 	sb.WriteString("NOT(")
-	sb.WriteString(n.node.SqlString())
+	sb.WriteString(n.Node.SqlString())
 	sb.WriteString(")")
 	return sb.String()
 }
 
 type bracket struct {
-	node
+	Node
 }
 
 func (b *bracket) Values() []interface{} {
-	return getValues(b.node).Values()
+	return getValues(b.Node).Values()
 }
 
-func ibracket(n node) node {
+func ibracket(n Node) Node {
 	switch n.(type) {
 	case *clause:
-		return &bracket{node: n}
+		return &bracket{Node: n}
 	default:
 		return n
 	}
 }
 
 func (b *bracket) SqlString() string {
-	return "(" + b.node.SqlString() + ")"
+	return "(" + b.Node.SqlString() + ")"
 }

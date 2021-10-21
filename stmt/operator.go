@@ -3,7 +3,7 @@ package stmt
 type jsonOperator struct {
 	c  Column
 	op string
-	r  node
+	r  Node
 }
 
 func (j *jsonOperator) SqlString() string {

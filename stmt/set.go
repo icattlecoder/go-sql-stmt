@@ -2,7 +2,7 @@ package stmt
 
 type setOperator struct {
 	operator string
-	source   node
+	source   Node
 	*clause
 	sets []*setOperator
 }
@@ -19,7 +19,7 @@ func (s *setOperator) SqlString() string {
 	return sb.String()
 }
 
-func (s *setOperator) Union(source node) *setOperator {
+func (s *setOperator) Union(source Node) *setOperator {
 
 	s.sets = append(s.sets, &setOperator{
 		operator: "UNION",
@@ -29,7 +29,7 @@ func (s *setOperator) Union(source node) *setOperator {
 }
 
 func (s *setOperator) Values() []interface{} {
-	n := []node{s.source}
+	n := []Node{s.source}
 	for _, su := range s.sets {
 		n = append(n, su.source)
 	}
