@@ -126,7 +126,6 @@ func (c *clause) From(sources ...Node) *clause {
 	f := from{
 		sources: sources[0],
 		joins:   js,
-		//value:   getValues(sources...),
 	}
 	c.from = &f
 	return c
@@ -161,8 +160,9 @@ func (c *clause) Limit(size int) *clause {
 }
 
 func (c *clause) ExplainJson() *clause {
-	c.explain = &explain{Explain{Format: "JSON"}}
-	return c
+	nc := *c
+	nc.explain = &explain{Explain{Format: "JSON"}}
+	return &nc
 }
 
 func (c *clause) Distinct() *clause {
@@ -197,16 +197,16 @@ func (c *clause) SqlString() string {
 	if c.from != nil {
 		bs = append(bs, c.from)
 	}
-	if c.where != nil {
+	if c.where != nil && len(c.where.nodes) > 0 {
 		bs = append(bs, c.where)
 	}
-	if c.groupBy != nil {
+	if c.groupBy != nil && len(c.groupBy.nodes) > 0 {
 		bs = append(bs, c.groupBy)
 	}
-	if c.having != nil {
+	if c.having != nil && len(c.having.nodes) > 0 {
 		bs = append(bs, c.having)
 	}
-	if c.orderBy != nil {
+	if c.orderBy != nil && len(c.orderBy.nodes) > 0 {
 		bs = append(bs, c.orderBy)
 	}
 	if c.limit != nil {

@@ -41,7 +41,6 @@ func Coalesce(x, y args, others ...args) *scalarFunction {
 
 }
 
-
 type over struct {
 	partition Node
 	order     Node
@@ -143,6 +142,7 @@ var (
 	ToJsonb     = NewAggregateFunction("to_jsonb")
 	ArrayRemove = NewAggregateFunction("ARRAY_REMOVE")
 	ArrayAgg    = NewAggregateFunction("ARRAY_AGG")
+	Unnest      = NewAggregateFunction("UNNEST")
 )
 
 func (a *aggregateFunction) As(n string) *alias {
