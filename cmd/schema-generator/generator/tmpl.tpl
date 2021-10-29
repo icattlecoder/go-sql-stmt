@@ -47,7 +47,7 @@ func (t {{.TableName | firstToLow}}) SortableColumns(columns ...string)(n []stmt
 		}
 		{{end}}{{end}}
 	}{{end}}
-	return
+	return n
 }
 
 func (t {{.TableName | firstToLow}}) SqlString() string {
