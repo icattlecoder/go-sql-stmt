@@ -348,6 +348,10 @@ func (n *not) SqlString() string {
 	return sb.String()
 }
 
+func (n *not) Values() []interface{} {
+	return getValues(n.Node).Values()
+}
+
 type bracket struct {
 	Node
 }

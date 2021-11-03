@@ -264,7 +264,22 @@ AND download_counts.year*(100)+(download_counts.month) = (SELECT MAX(download_co
 download_counts.year 
 FROM download_counts 
 WHERE download_counts.channel_id IN (%s,%s,%s) AND download_counts.year IN (%s,%s)`,
-			wantValues: []interface{}{1, 2, 3,"2010","2011"},
+			wantValues: []interface{}{1, 2, 3, "2010", "2011"},
+		},
+		{
+			name: "not",
+			clause: Select(
+				DownloadCounts.Year,
+			).
+				From(DownloadCounts).
+				Where(
+					Not(DownloadCounts.Year.InString("2010", "2011")),
+				),
+			wantQuery: `SELECT 
+download_counts.year 
+FROM download_counts 
+WHERE NOT(download_counts.year IN (%s,%s))`,
+			wantValues: []interface{}{"2010", "2011"},
 		},
 	}
 	for _, tt := range tests {
