@@ -179,7 +179,7 @@ LIMIT 100`,
 		{
 			name: "if statement",
 			clause: Select(
-				RowNumber().Over(OrderBy(Desc(Sum(ProductsStats.Downloads)))).As("order"),
+				RowNumber().Over(OrderBy(Desc(Sum(ProductsStats.Downloads)), ProductsStats.Paid)).As("order"),
 				ProductsStats.Id,
 				ProductsStats.Name,
 				ProductsStats.LogoUrl,
@@ -203,7 +203,7 @@ LIMIT 100`,
 					Equals(ProductsStats.Extra.JsonField("track_id"), String("abc")),
 				).Limit(100),
 			wantQuery: `SELECT 
-ROW_NUMBER() OVER (ORDER BY SUM(products_stats.downloads) DESC) AS order, 
+ROW_NUMBER() OVER (ORDER BY SUM(products_stats.downloads) DESC, products_stats.paid) AS order, 
 products_stats.id, 
 products_stats.name, 
 products_stats.logo_url, 

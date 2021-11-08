@@ -43,7 +43,7 @@ func Coalesce(x, y args, others ...args) *scalarFunction {
 
 type over struct {
 	partition Node
-	order     Node
+	order     *baseClause
 }
 
 func (o *over) sqlString(sb *strings.Builder) string {
@@ -95,15 +95,15 @@ func PartitionBy(n Node) *over {
 	}
 }
 
-func OrderBy(n Node) *over {
+func OrderBy(n ...Node) *over {
 
 	return &over{
-		order: n,
+		order: newBaseClause("", n...).setSplit(", "),
 	}
 }
 
-func (o *over) OrderBy(n Node) *over {
-	o.order = n
+func (o *over) OrderBy(n ...Node) *over {
+	o.order = newBaseClause("", n...).setSplit(", ")
 	return o
 }
 
