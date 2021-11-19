@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"reflect"
 	"strings"
-	"time"
 )
 
 type star string
@@ -77,10 +76,6 @@ func (t Column) EqInt(val int) Node {
 	return Equals(t, newBasicTypeValue(val))
 }
 
-func (t Column) EqTime(tt time.Time) Node {
-	return Equals(t, newBasicTypeValue(tt))
-}
-
 func (t Column) NotNull() Node {
 	return &comparisonOperator{op: " NOT NULL", l: t, r: nil}
 }
@@ -97,8 +92,8 @@ func (t Column) LtInt(val int) Node {
 	return LessThan(t, newBasicTypeValue(val))
 }
 
-func (t Column) LtTime(tt time.Time) Node {
-	return LessThan(t, newBasicTypeValue(tt))
+func (t Column) LtString(r string) Node {
+	return LessThan(t, newBasicTypeValue(r))
 }
 
 func (t Column) Lte(r Node) Node {
@@ -109,8 +104,8 @@ func (t Column) LteInt(val int) Node {
 	return LessEquals(t, newBasicTypeValue(val))
 }
 
-func (t Column) LteTime(tt time.Time) Node {
-	return LessEquals(t, newBasicTypeValue(tt))
+func (t Column) LteString(r string) Node {
+	return LessEquals(t, newBasicTypeValue(r))
 }
 
 func (t Column) Gt(r Node) Node {
@@ -121,8 +116,8 @@ func (t Column) GtInt(val int) Node {
 	return GreaterThan(t, newBasicTypeValue(val))
 }
 
-func (t Column) GtTime(tt time.Time) Node {
-	return GreaterThan(t, newBasicTypeValue(tt))
+func (t Column) GtString(r string) Node {
+	return GreaterThan(t, newBasicTypeValue(r))
 }
 
 func (t Column) Gte(r Node) Node {
@@ -134,9 +129,9 @@ func (t Column) GteInt(val int) Node {
 	return GreaterEquals(t, newBasicTypeValue(val))
 }
 
-func (t Column) GteTime(tt time.Time) Node {
+func (t Column) GteString(r string) Node {
 
-	return GreaterEquals(t, newBasicTypeValue(tt))
+	return GreaterEquals(t, newBasicTypeValue(r))
 }
 
 func (t Column) Like(val string) Node {
