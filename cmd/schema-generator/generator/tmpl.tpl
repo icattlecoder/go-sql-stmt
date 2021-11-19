@@ -2,6 +2,7 @@ package {{.package}}
 
 import (
     "strings"
+
     "github.com/fork-ai/go-sql-stmt/stmt"
 )
 

@@ -2,6 +2,7 @@ package stmt
 
 import (
 	"fmt"
+	"time"
 )
 
 type Node interface {
@@ -65,6 +66,8 @@ func newBasicTypeValue(v interface{}) *basicTypeValue {
 	case bool, uint8, uint16, uint32, uint64, int8, int16, int32, int, int64, float32, float64, string:
 		return &basicTypeValue{value: v}
 	case []int, []string:
+		return &basicTypeValue{value: v}
+	case time.Time:
 		return &basicTypeValue{value: v}
 	default:
 		//not support, do nothing
