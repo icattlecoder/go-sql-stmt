@@ -72,6 +72,10 @@ func (t Column) EqString(r string) Node {
 	return Equals(t, newBasicTypeValue(r))
 }
 
+func (t Column) EqBool(b bool) Node {
+	return Equals(t, newBasicTypeValue(b))
+}
+
 func (t Column) EqInt(val int) Node {
 	return Equals(t, newBasicTypeValue(val))
 }
