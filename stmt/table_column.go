@@ -84,6 +84,10 @@ func (t Column) NotNull() Node {
 	return &comparisonOperator{op: " NOT NULL", l: t, r: nil}
 }
 
+func (t Column) IsNotNull() Node {
+	return &comparisonOperator{op: " IS NOT NULL", l: t, r: nil}
+}
+
 func (t Column) IsNull() Node {
 	return &comparisonOperator{op: " IS NULL", l: t, r: nil}
 }
