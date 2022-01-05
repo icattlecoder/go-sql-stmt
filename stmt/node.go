@@ -191,6 +191,13 @@ func (b *branch) underlyingNode() Node {
 	return b.Node
 }
 
+func Iff(t bool, f func() Node) *branch {
+	if t {
+		return &branch{t, f()}
+	}
+	return &branch{}
+}
+
 func If(t bool, node Node) *branch {
 	if t {
 		return &branch{t, node}
