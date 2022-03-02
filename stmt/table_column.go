@@ -201,6 +201,22 @@ func (t Column) In(n Node) Node {
 	return &comparisonOperator{op: "IN", l: t, r: ibracket(n)}
 }
 
+/*
+Operator "@@" is Text Search Function indicates if tsvector matches tsquery
+to_tsquery([ config regconfig , ] query text) : normalize words and convert to tsquery
+*/
+func (t Column) TsMatchText(regConfig, text string) Node {
+	return &comparisonOperator{op: "@@ to_tsquery", l: t, r: expandRaw([]string{regConfig, text})}
+}
+
+/*
+Operator "@@" is Text Search Function indicates if tsvector matches tsquery
+plainto_tsquery([ config regconfig , ] query text) : tsquery produce tsquery ignoring punctuation
+*/
+func (t Column) TSMatchPlainText(regConfig, val string) Node {
+	return &comparisonOperator{op: "@@ plainto_tsquery", l: t, r: expandRaw([]string{regConfig, val})}
+}
+
 func (t Column) Desc(isDesc ...bool) Node {
 	if len(isDesc) == 0 {
 		return Asc(t)
