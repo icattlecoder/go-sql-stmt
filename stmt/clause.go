@@ -151,6 +151,11 @@ func (c *clause) Having(n ...Node) *clause {
 	return c
 }
 
+func (c *clause) PartitionBy(n ...Node) *clause {
+	c.having = newBaseClause("PARTITION BY", n...)
+	return c
+}
+
 func (c *clause) Limit(size int) *clause {
 	c.limit = &limitOffset{
 		label: "LIMIT",
