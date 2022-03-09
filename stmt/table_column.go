@@ -193,6 +193,10 @@ func (t Column) InInt(val ...int) Node {
 	return &comparisonOperator{op: "IN", l: t, r: expandRaw(val)}
 }
 
+func (t Column) InInt64(val ...int64) Node {
+	return &comparisonOperator{op: "IN", l: t, r: expandRaw(val)}
+}
+
 func (t Column) InString(val ...string) Node {
 	return &comparisonOperator{op: "IN", l: t, r: expandRaw(val)}
 }
