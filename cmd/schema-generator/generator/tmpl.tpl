@@ -34,6 +34,10 @@ func new{{.TableName|firstToUpper}}(table, alias string) {{.TableName |firstToLo
      }
 }
 
+func (t {{.TableName | firstToLow}}) All() []stmt.Node{
+    return []stmt.Node{ {{range .Columns}}t.{{.Name|firstToUpper}},{{end}}}
+}
+
 func (t {{.TableName | firstToLow}}) Alias(n string) {{.TableName|firstToLow}}{
 	return new{{.TableName|firstToUpper}}(t.table, n)
 }
