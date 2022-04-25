@@ -59,7 +59,7 @@ func TestClauses(t *testing.T) {
 				Sum(DownloadCounts.Count).As("total_counts"),
 			).
 				From(DownloadCounts).
-				Where(DownloadCounts.ChannelId.EqString("123")).
+				Where(DownloadCounts.ChannelId.EqString("123"), DownloadCounts.ProductId.EqInt64(9223372036854775807)).
 				GroupBy(DownloadCounts.ProductId, DownloadCounts.Year).
 				OrderBy(DownloadCounts.ProductId, Desc(DownloadCounts.Year)).
 				Limit(20).
@@ -69,10 +69,11 @@ download_counts.product_id,
 download_counts.year, 
 SUM(download_counts.count) AS total_counts 
 FROM download_counts 
-WHERE download_counts.channel_id = %s 
+WHERE download_counts.channel_id = %s AND download_counts.product_id = %s 
+GROUP BY download_counts.product_id, download_counts.year 
 ORDER BY download_counts.product_id, download_counts.year DESC 
 LIMIT 20 OFFSET 100`,
-			wantValues: []interface{}{"123"},
+			wantValues: []interface{}{"123", int64(9223372036854775807)},
 		},
 		{
 			name: "union set operator",
@@ -280,6 +281,24 @@ download_counts.year
 FROM download_counts 
 WHERE NOT(download_counts.year IN (%s,%s))`,
 			wantValues: []interface{}{"2010", "2011"},
+		},
+		{
+			name: "array operator",
+			clause: Select(
+				All,
+			).
+				From(
+					Products,
+				).Where(
+				Products.ScreenshotUrls.ArrayContainsAny("https://qq.com/image/100"),
+				Products.Countries.ArrayContainsAll("CN", "US"),
+			).Limit(100),
+			wantQuery: `SELECT * 
+FROM products 
+WHERE products.screenshot_urls && %s 
+AND products.countries @> %s 
+LIMIT 100`,
+			wantValues: []interface{}{"{https://qq.com/image/100}", "{CN,US}"},
 		},
 	}
 	for _, tt := range tests {

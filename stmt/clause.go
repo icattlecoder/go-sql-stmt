@@ -142,7 +142,7 @@ func (c *clause) OrderBy(n ...Node) *clause {
 }
 
 func (c *clause) GroupBy(n ...Node) *clause {
-	c.orderBy = newBaseClause("GROUP BY", n...)
+	c.groupBy = newBaseClause("GROUP BY", n...)
 	return c
 }
 

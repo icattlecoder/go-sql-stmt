@@ -52,7 +52,7 @@ func (t Column) JsonContainsKevValue(kv map[string]interface{}) Node {
 	}
 }
 
-func (t Column) JsonContainsAny(f ...string) Node {
+func (t Column) JsonContainsAll(f ...string) Node {
 	return &jsonOperator{
 		c:  t,
 		op: " @> ",
@@ -60,7 +60,17 @@ func (t Column) JsonContainsAny(f ...string) Node {
 	}
 }
 
-func (t Column) JsonContainsAll(f ...string) Node {
+// ArrayContainsAll 包含 f 中所有元素
+func (t Column) ArrayContainsAll(f ...string) Node {
+	return &jsonOperator{
+		c:  t,
+		op: " @> ",
+		r:  String("{" + strings.Join(f, ",") + "}"),
+	}
+}
+
+// ArrayContainsAny 包含 f 中任意元素（t 和 f 中有至少一个元素相同）
+func (t Column) ArrayContainsAny(f ...string) Node {
 	return &jsonOperator{
 		c:  t,
 		op: " && ",
@@ -77,6 +87,10 @@ func (t Column) EqBool(b bool) Node {
 }
 
 func (t Column) EqInt(val int) Node {
+	return Equals(t, newBasicTypeValue(val))
+}
+
+func (t Column) EqInt64(val int64) Node {
 	return Equals(t, newBasicTypeValue(val))
 }
 
