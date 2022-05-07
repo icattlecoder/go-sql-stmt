@@ -71,9 +71,11 @@ type from struct {
 }
 
 func (f *from) Values() []interface{} {
-
-	//getValues(f.joins...)
-	return []interface{}{}
+	vals := getValues(f.sources).Values()
+	for _, j := range f.joins {
+		vals = append(vals, getValues(j).Values()...)
+	}
+	return vals
 }
 
 func (f *from) SqlString() string {

@@ -79,6 +79,24 @@ func RowNumber() *windowFunction {
 	}
 }
 
+func FirstValue(n Node) *windowFunction {
+	return &windowFunction{
+		function: function{Name: "FIRST_VALUE", args: []args{n}},
+	}
+}
+
+func LastValue(n Node) *windowFunction {
+	return &windowFunction{
+		function: function{Name: "LAST_VALUE", args: []args{n}},
+	}
+}
+
+func NthValue(n Node, nth int) *windowFunction {
+	return &windowFunction{
+		function: function{Name: "NTH_VALUE", args: []args{n, Int(nth)}},
+	}
+}
+
 func (w *windowFunction) Over(n *over) *windowFunction {
 	w.over = n
 	return w
@@ -143,6 +161,7 @@ var (
 	ArrayRemove = NewAggregateFunction("ARRAY_REMOVE")
 	ArrayAgg    = NewAggregateFunction("ARRAY_AGG")
 	Unnest      = NewAggregateFunction("UNNEST")
+	Any         = NewAggregateFunction("ANY")
 )
 
 func (a *aggregateFunction) As(n string) *alias {

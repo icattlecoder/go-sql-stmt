@@ -98,14 +98,20 @@ LIMIT 10`,
 			clause: Select(
 				DownloadCounts.CountryCode,
 				Rank().Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)).As("year_rank"),
+				FirstValue(DownloadCounts.Count).Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)),
+				LastValue(DownloadCounts.Count).Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)),
+				NthValue(DownloadCounts.Count, 2).Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)),
 			).
 				From(DownloadCounts).
-				Where(ProductsQueryStats.Id.EqInt(123)),
+				Where(DownloadCounts.ProductId.EqInt(123)),
 			wantQuery: `SELECT 
 download_counts.country_code, 
-Rank() OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year) AS year_rank 
+Rank() OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year) AS year_rank, 
+FIRST_VALUE(download_counts.count) OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year), 
+LAST_VALUE(download_counts.count) OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year), 
+NTH_VALUE(download_counts.count, 2) OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year) 
 FROM download_counts 
-WHERE products_query_stats.id = %s`,
+WHERE download_counts.product_id = %s`,
 			wantValues: []interface{}{123},
 		},
 		{
@@ -149,6 +155,7 @@ FROM products_query_stats WHERE products_query_stats.name = %s`,
 					Join(Publishers).On(Publishers.Id.Eq(Products.PublisherId)),
 					Join(Channels).On(Channels.Id.Eq(Products.ChannelId)),
 					LeftJoin(DownloadCounts).On(Products.Id.Eq(DownloadCounts.ProductId)),
+					LeftJoin(Services).On(Services.Homepage.Eq(Any(Products.ScreenshotUrls))),
 				).GroupBy(Products.Id, Publishers.Id, Channels.Id),
 			wantQuery: `SELECT 
 products.id, 
@@ -157,6 +164,7 @@ FROM products
 JOIN publishers ON (publishers.id = products.publisher_id) 
 JOIN channels ON (channels.id = products.channel_id) 
 LEFT JOIN download_counts ON (products.id = download_counts.product_id) 
+LEFT JOIN services ON (services.homepage = ANY(products.screenshot_urls)) 
 GROUP BY products.id, publishers.id, channels.id`,
 		},
 		{
@@ -299,6 +307,36 @@ WHERE products.screenshot_urls && %s
 AND products.countries @> %s 
 LIMIT 100`,
 			wantValues: []interface{}{"{https://qq.com/image/100}", "{CN,US}"},
+		},
+		{
+			name: "subqueries",
+			clause: Select(
+				All,
+			).
+				From(
+					Services,
+					Join(
+						Select(
+							ProductsQueryStats.Id,
+							ProductsQueryStats.Name,
+							ProductsQueryStats.ServicesUids,
+						).
+							From(ProductsQueryStats).
+							Where(ProductsQueryStats.BundleId.EqString("com.tencent.xin")).
+							As("t1"),
+					).On(Services.Uid.Eq(Any(Column("t1.services_uids")))),
+				).
+				Where(Services.PublisherId.GtInt(1)).
+				OrderBy(Services.UpdatedAt),
+			wantQuery: `SELECT * 
+FROM services 
+JOIN (SELECT products_query_stats.id, products_query_stats.name, products_query_stats.services_uids 
+FROM products_query_stats 
+WHERE products_query_stats.bundle_id = %s) AS t1 
+ON (services.uid = ANY(t1.services_uids)) 
+WHERE services.publisher_id > %s 
+ORDER BY services.updated_at`,
+			wantValues: []interface{}{"com.tencent.xin", 1},
 		},
 	}
 	for _, tt := range tests {

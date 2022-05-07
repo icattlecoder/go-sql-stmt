@@ -9,7 +9,9 @@ type joinPredicate struct {
 }
 
 func (j *joinPredicate) Values() []interface{} {
-	return getValues(j.on...).Values()
+	valNodes := []Node{j.source}
+	valNodes = append(valNodes, j.on...)
+	return getValues(valNodes...).Values()
 }
 
 func (j *joinPredicate) SqlString() string {
@@ -55,4 +57,3 @@ func Join(source Node) *joinPredicate {
 		source: source,
 	}
 }
-
