@@ -170,6 +170,13 @@ func (t Column) LikeSuffix(val string) Node {
 	return &comparisonOperator{op: "LIKE", l: t, r: newBasicTypeValue(val + "%")}
 }
 
+func (t Column) LikeRaw(val interface{}) Node {
+	if n, ok := val.(Node); ok {
+		return &comparisonOperator{op: "LIKE", l: t, r: n}
+	}
+	return &comparisonOperator{op: "LIKE", l: t, r: newBasicTypeValue(val)}
+}
+
 func (t Column) ILike(val string) Node {
 
 	return &comparisonOperator{op: "ILIKE", l: t, r: newBasicTypeValue("%" + val + "%")}
@@ -182,6 +189,13 @@ func (t Column) ILikePrefix(val string) Node {
 
 func (t Column) ILikeSuffix(val string) Node {
 	return &comparisonOperator{op: "ILIKE", l: t, r: newBasicTypeValue(val + "%")}
+}
+
+func (t Column) ILikeRaw(val interface{}) Node {
+	if n, ok := val.(Node); ok {
+		return &comparisonOperator{op: "ILIKE", l: t, r: n}
+	}
+	return &comparisonOperator{op: "ILIKE", l: t, r: newBasicTypeValue(val)}
 }
 
 // expand 会将指定数组对象平铺并重新拼接成用逗号分割的数据库查询参数。
