@@ -338,6 +338,14 @@ WHERE services.publisher_id > %s
 ORDER BY services.updated_at`,
 			wantValues: []interface{}{"com.tencent.xin", 1},
 		},
+		{
+			name: "array constructor",
+			clause: Select(
+				Array(1, 2, "3", 4.5),
+			),
+			wantQuery:  `SELECT ARRAY[%s, %s, %s, %s]`,
+			wantValues: []interface{}{1, 2, "3", 4.5},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

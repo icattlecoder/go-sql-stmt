@@ -4,7 +4,7 @@ import "strings"
 
 type function struct {
 	Name string
-	args []args
+	args []Node
 }
 
 func (f *function) Values() []interface{} {
@@ -32,11 +32,11 @@ type scalarFunction struct {
 	function
 }
 
-func Coalesce(x, y args, others ...args) *scalarFunction {
+func Coalesce(x, y Node, others ...Node) *scalarFunction {
 
 	return &scalarFunction{function: function{
 		Name: "COALESCE",
-		args: append([]args{x, y}, others...),
+		args: append([]Node{x, y}, others...),
 	}}
 
 }
@@ -81,19 +81,19 @@ func RowNumber() *windowFunction {
 
 func FirstValue(n Node) *windowFunction {
 	return &windowFunction{
-		function: function{Name: "FIRST_VALUE", args: []args{n}},
+		function: function{Name: "FIRST_VALUE", args: []Node{n}},
 	}
 }
 
 func LastValue(n Node) *windowFunction {
 	return &windowFunction{
-		function: function{Name: "LAST_VALUE", args: []args{n}},
+		function: function{Name: "LAST_VALUE", args: []Node{n}},
 	}
 }
 
 func NthValue(n Node, nth int) *windowFunction {
 	return &windowFunction{
-		function: function{Name: "NTH_VALUE", args: []args{n, Int(nth)}},
+		function: function{Name: "NTH_VALUE", args: []Node{n, Int(nth)}},
 	}
 }
 
@@ -139,9 +139,9 @@ type aggregateFunction struct {
 	function
 }
 
-func NewAggregateFunction(n string) func(args ...args) *aggregateFunction {
+func NewAggregateFunction(n string) func(args ...Node) *aggregateFunction {
 
-	return func(args ...args) *aggregateFunction {
+	return func(args ...Node) *aggregateFunction {
 		return &aggregateFunction{
 			function{
 				Name: n,

@@ -20,7 +20,7 @@ func put(b *strings.Builder) {
 	sbPool.Put(b)
 }
 
-func argsSqlString(sb *strings.Builder, args ...args) {
+func argsSqlString(sb *strings.Builder, args ...Node) {
 	for i, a := range args {
 		sb.WriteString(a.SqlString())
 		if i < len(args)-1 {
