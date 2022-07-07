@@ -338,6 +338,22 @@ WHERE services.publisher_id > %s
 ORDER BY services.updated_at`,
 			wantValues: []interface{}{"com.tencent.xin", 1},
 		},
+		{
+			name: "similar to",
+			clause: Select(
+				All,
+			).
+				From(
+					Services,
+				).
+				Where(
+					Services.Name.SimilarTo("%(腾讯|阿里)%"),
+				),
+			wantQuery: `SELECT * 
+FROM services 
+WHERE services.name SIMILAR TO %s`,
+			wantValues: []interface{}{"%(腾讯|阿里)%"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
