@@ -339,6 +339,22 @@ ORDER BY services.updated_at`,
 			wantValues: []interface{}{"com.tencent.xin", 1},
 		},
 		{
+			name: "similar to",
+			clause: Select(
+				All,
+			).
+				From(
+					Services,
+				).
+				Where(
+					Services.Name.SimilarTo("%(腾讯|阿里)%"),
+				),
+			wantQuery: `SELECT * 
+FROM services 
+WHERE services.name SIMILAR TO %s`,
+			wantValues: []interface{}{"%(腾讯|阿里)%"},
+		},
+		{
 			name: "array constructor",
 			clause: Select(
 				Array(1, 2, "3", 4.5),

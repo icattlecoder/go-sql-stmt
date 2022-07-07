@@ -276,6 +276,6 @@ func (t Column) Multi(n Node) *arithmeticOperator {
 	}
 }
 
-//func (t Column) In(value Node) Node{
-//	return &columnOp{l: t, op: "IN", r: &stmt.bracket{valueStmt: value}}
-//}
+func (t Column) SimilarTo(val string) Node {
+	return &comparisonOperator{op: "SIMILAR TO", l: t, r: newBasicTypeValue(val)}
+}
