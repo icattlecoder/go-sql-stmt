@@ -354,6 +354,32 @@ FROM services
 WHERE services.name SIMILAR TO %s`,
 			wantValues: []interface{}{"%(腾讯|阿里)%"},
 		},
+		{
+			name: "array constructor",
+			clause: Select(
+				Array(1, 2, "3", 4.5),
+			),
+			wantQuery:  `SELECT ARRAY[%s, %s, %s, %s]`,
+			wantValues: []interface{}{1, 2, "3", 4.5},
+		},
+		{
+			name: "like array",
+			clause: Select(
+				All,
+			).
+				From(
+					Services,
+				).
+				Where(
+					Services.Name.LikeRaw(Any(Array("%对象%", "%存储%"))),
+					Services.Name.ILikeRaw(Any(Array("uClouD%", "linkV%"))),
+				),
+			wantQuery: `SELECT * 
+FROM services 
+WHERE services.name LIKE ANY(ARRAY[%s, %s]) 
+AND services.name ILIKE ANY(ARRAY[%s, %s])`,
+			wantValues: []interface{}{"%对象%", "%存储%", "uClouD%", "linkV%"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
