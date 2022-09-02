@@ -140,12 +140,11 @@ type aggregateFunction struct {
 }
 
 func NewAggregateFunction(n string) func(args ...Node) *aggregateFunction {
-
 	return func(args ...Node) *aggregateFunction {
 		return &aggregateFunction{
 			function{
 				Name: n,
-				args: args,
+				args: notNilNodes(args),
 			},
 		}
 	}

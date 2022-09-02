@@ -38,7 +38,7 @@ func (j *joinPredicate) SqlString() string {
 }
 
 func (j *joinPredicate) On(cond ...Node) *joinPredicate {
-	j.on = cond
+	j.on = notNilNodes(cond)
 	return j
 }
 

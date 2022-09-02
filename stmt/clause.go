@@ -111,20 +111,23 @@ func Select(n ...Node) *clause {
 }
 
 func (c *clause) From(sources ...Node) *clause {
-
-	var js []*joinPredicate
-	//FIXME panic
-	for _, j := range sources[1:] {
-		if p, ok := j.(*joinPredicate); ok {
-			js = append(js, p)
-			continue
-		}
-		js = append(js, &joinPredicate{
-			typ:    "CROSS JOIN",
-			source: j,
-		})
+	sources = notNilNodes(sources)
+	if len(sources) == 0 {
+		return c
 	}
-
+	var js []*joinPredicate
+	if len(sources) > 1 {
+		for _, j := range sources[1:] {
+			if p, ok := j.(*joinPredicate); ok {
+				js = append(js, p)
+				continue
+			}
+			js = append(js, &joinPredicate{
+				typ:    "CROSS JOIN",
+				source: j,
+			})
+		}
+	}
 	f := from{
 		sources: sources[0],
 		joins:   js,
