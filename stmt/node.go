@@ -59,7 +59,7 @@ type basicTypeValue struct {
 	hold  string
 }
 
-//TODO: refactor with go2 generic type is a good option
+// TODO: refactor with go2 generic type is a good option
 func newBasicTypeValue(v interface{}) *basicTypeValue {
 	switch v.(type) {
 	case bool, uint8, uint16, uint32, uint64, int8, int16, int32, int, int64, float32, float64, string:
@@ -215,5 +215,5 @@ func (b *branch) ElseIf(t bool, node Node) *branch {
 }
 
 func Nodes(n ...Node) []Node {
-	return n
+	return notNilNodes(n)
 }

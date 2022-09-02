@@ -27,13 +27,13 @@ func (l *logicalOperator) Values() []interface{} {
 func And(items ...Node) *logicalOperator {
 	return &logicalOperator{
 		op:    " AND ",
-		items: items,
+		items: notNilNodes(items),
 	}
 }
 
 func Or(items ...Node) *logicalOperator {
 	return &logicalOperator{
 		op:    " OR ",
-		items: items,
+		items: notNilNodes(items),
 	}
 }
