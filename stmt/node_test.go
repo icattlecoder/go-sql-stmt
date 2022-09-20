@@ -394,3 +394,32 @@ AND services.name ILIKE ANY(ARRAY[%s, %s])`,
 		})
 	}
 }
+
+func TestIfBranch(t *testing.T) {
+	col1 := Column("if")
+	col2 := Column("elseif")
+	col3 := Column("else")
+	br := If(true, col1).ElseIf(false, col2).Else(col3)
+	if br.SqlString() != col1.SqlString() {
+		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col1.SqlString())
+		return
+	}
+
+	br = If(false, col1).ElseIf(true, col2).Else(col3)
+	if br.SqlString() != col2.SqlString() {
+		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col2.SqlString())
+		return
+	}
+
+	br = If(false, col1).ElseIf(false, col2).Else(col3)
+	if br.SqlString() != col3.SqlString() {
+		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col3.SqlString())
+		return
+	}
+
+	br = If(true, col1).ElseIf(true, col2).Else(col3)
+	if br.SqlString() != col1.SqlString() {
+		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col1.SqlString())
+		return
+	}
+}

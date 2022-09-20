@@ -203,10 +203,16 @@ func If(t bool, node Node) *branch {
 }
 
 func (b *branch) Else(node Node) Node {
-	return node
+	if b.b {
+		return b
+	}
+	return &branch{b: true, Node: node}
 }
 
 func (b *branch) ElseIf(t bool, node Node) *branch {
+	if b.b {
+		return b
+	}
 	if t {
 		b.b = true
 		b.Node = node
