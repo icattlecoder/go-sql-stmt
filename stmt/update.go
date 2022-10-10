@@ -1,6 +1,10 @@
 package stmt
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/keegancsmith/sqlf"
+)
 
 type updateClause struct {
 	tableName string
@@ -82,4 +86,8 @@ func (c *updateClause) writeColumns(sb *strings.Builder, columns []Column) {
 		}
 	}
 	sb.WriteString(")")
+}
+
+func (c *updateClause) Query() *sqlf.Query {
+	return sqlf.Sprintf(c.SqlString(), c.Values()...)
 }
