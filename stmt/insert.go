@@ -2,6 +2,8 @@ package stmt
 
 import (
 	"strings"
+
+	"github.com/keegancsmith/sqlf"
 )
 
 type insertClause struct {
@@ -109,4 +111,8 @@ func (c *insertClause) writeColumns(sb *strings.Builder, columns []Column) {
 		}
 	}
 	sb.WriteString(")")
+}
+
+func (c *insertClause) Query() *sqlf.Query {
+	return sqlf.Sprintf(c.SqlString(), c.Values()...)
 }

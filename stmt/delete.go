@@ -1,6 +1,10 @@
 package stmt
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/keegancsmith/sqlf"
+)
 
 type deleteClause struct {
 	tableName string
@@ -39,4 +43,8 @@ func (c *deleteClause) Values() []interface{} {
 		vs = append(vs, c.where.Values()...)
 	}
 	return vs
+}
+
+func (c *deleteClause) Query() *sqlf.Query {
+	return sqlf.Sprintf(c.SqlString(), c.Values()...)
 }
