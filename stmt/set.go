@@ -1,10 +1,10 @@
 package stmt
 
 type setOperator struct {
+	*selectClause
 	operator string
 	source   Node
-	*clause
-	sets []*setOperator
+	sets     []*setOperator
 }
 
 func (s *setOperator) SqlString() string {

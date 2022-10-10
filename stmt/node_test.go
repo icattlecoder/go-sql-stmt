@@ -16,7 +16,7 @@ func isStrEq(a, b string) bool {
 	return removeNewLine(a) == removeNewLine(b)
 }
 
-func TestClauses(t *testing.T) {
+func TestSelectClauses(t *testing.T) {
 
 	type ProductsRankOptions struct {
 		Type                 string
@@ -47,7 +47,7 @@ func TestClauses(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		clause     *clause
+		clause     *selectClause
 		wantQuery  string
 		wantValues []interface{}
 	}{
@@ -363,6 +363,14 @@ WHERE services.name SIMILAR TO %s`,
 			wantValues: []interface{}{1, 2, "3", 4.5},
 		},
 		{
+			name: "array constructor nest",
+			clause: Select(
+				Array(Array(1, 2), Array(3, 4)),
+			),
+			wantQuery:  `SELECT ARRAY[[%s, %s], [%s, %s]]`,
+			wantValues: []interface{}{1, 2, 3, 4},
+		},
+		{
 			name: "like array",
 			clause: Select(
 				All,
@@ -379,6 +387,201 @@ FROM services
 WHERE services.name LIKE ANY(ARRAY[%s, %s]) 
 AND services.name ILIKE ANY(ARRAY[%s, %s])`,
 			wantValues: []interface{}{"%对象%", "%存储%", "uClouD%", "linkV%"},
+		},
+		{
+			name:       "values constructor",
+			clause:     Select(All).From(Values(1, 2, "3", 4.5).As("t1")),
+			wantQuery:  `SELECT * FROM (VALUES (%s, %s, %s, %s)) AS t1`,
+			wantValues: []interface{}{1, 2, "3", 4.5},
+		},
+		{
+			name:       "values constructor nest",
+			clause:     Select(All).From(Values(Values(1, 2), Values(3, 4)).As("t1")),
+			wantQuery:  `SELECT * FROM (VALUES (%s, %s), (%s, %s)) AS t1`,
+			wantValues: []interface{}{1, 2, 3, 4},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotQuery := tt.clause.SqlString()
+			gotValues := tt.clause.Values()
+			if !isStrEq(gotQuery, tt.wantQuery) {
+				t.Errorf("SqlString() = %v, want \n%v", gotQuery, removeNewLine(tt.wantQuery))
+			}
+			if !reflect.DeepEqual(gotValues, tt.wantValues) {
+				t.Errorf("Values() = %v, want %v", gotValues, tt.wantValues)
+			}
+		})
+	}
+}
+
+func TestInsertClauses(t *testing.T) {
+	tests := []struct {
+		name       string
+		clause     *insertClause
+		wantQuery  string
+		wantValues []interface{}
+	}{
+		{
+			name: "simple",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Id,
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Values(
+					1,
+					"uid1",
+					"channel1",
+					Now(),
+				),
+			),
+			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW())`,
+			wantValues: []interface{}{1, "uid1", "channel1"},
+		},
+		{
+			name: "simple values",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Id,
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Values(
+					Values(
+						1,
+						"uid1",
+						"channel1",
+						Now(),
+					),
+					Values(
+						2,
+						"uid2",
+						"channel2",
+						Now(),
+					),
+				),
+			),
+			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()), (%s, %s, %s, NOW())`,
+			wantValues: []interface{}{1, "uid1", "channel1", 2, "uid2", "channel2"},
+		},
+		{
+			name: "on conflict do nothing",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Id,
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Values(
+					1,
+					"uid1",
+					"channel1",
+					Now(),
+				),
+			).
+				OnConflict([]Column{Channels.Uid}).
+				DoNothing(),
+			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()) ON CONFLICT (uid) DO NOTHING`,
+			wantValues: []interface{}{1, "uid1", "channel1"},
+		},
+		{
+			name: "on conflict do update set",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Id,
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Values(
+					1,
+					"uid1",
+					"channel1",
+					Now(),
+				),
+			).
+				OnConflict([]Column{Channels.Uid}).
+				DoUpdateSet(map[Column]interface{}{
+					Channels.Name:      "channel2",
+					Channels.CreatedAt: Now(),
+				}),
+			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()) ON CONFLICT (uid) DO UPDATE SET name = %s, created_at = NOW()`,
+			wantValues: []interface{}{1, "uid1", "channel1", "channel2"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotQuery := tt.clause.SqlString()
+			gotValues := tt.clause.Values()
+			if !isStrEq(gotQuery, tt.wantQuery) {
+				t.Errorf("SqlString() = %v, want \n%v", gotQuery, removeNewLine(tt.wantQuery))
+			}
+			if !reflect.DeepEqual(gotValues, tt.wantValues) {
+				t.Errorf("Values() = %v, want %v", gotValues, tt.wantValues)
+			}
+		})
+	}
+}
+
+func TestUpdateClauses(t *testing.T) {
+	tests := []struct {
+		name       string
+		clause     *updateClause
+		wantQuery  string
+		wantValues []interface{}
+	}{
+		{
+			name: "simple",
+			clause: Update(
+				Channels,
+			).
+				Set(map[Column]interface{}{
+					Channels.Name:      "channel2",
+					Channels.CreatedAt: Now(),
+				}).
+				Where(Channels.Id.EqInt(1)),
+			wantQuery:  `UPDATE channels SET name = %s, created_at = NOW() WHERE id = %s`,
+			wantValues: []interface{}{"channel2", 1},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotQuery := tt.clause.SqlString()
+			gotValues := tt.clause.Values()
+			if !isStrEq(gotQuery, tt.wantQuery) {
+				t.Errorf("SqlString() = %v, want \n%v", gotQuery, removeNewLine(tt.wantQuery))
+			}
+			if !reflect.DeepEqual(gotValues, tt.wantValues) {
+				t.Errorf("Values() = %v, want %v", gotValues, tt.wantValues)
+			}
+		})
+	}
+}
+
+func TestDeleteClauses(t *testing.T) {
+	tests := []struct {
+		name       string
+		clause     *deleteClause
+		wantQuery  string
+		wantValues []interface{}
+	}{
+		{
+			name: "simple",
+			clause: DeleteFrom(
+				Channels,
+			).
+				Where(Channels.Id.EqInt(1)),
+			wantQuery:  `DELETE FROM channels WHERE id = %s`,
+			wantValues: []interface{}{1},
 		},
 	}
 	for _, tt := range tests {

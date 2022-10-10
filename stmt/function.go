@@ -161,6 +161,7 @@ var (
 	ArrayAgg    = NewAggregateFunction("ARRAY_AGG")
 	Unnest      = NewAggregateFunction("UNNEST")
 	Any         = NewAggregateFunction("ANY")
+	Now         = NewAggregateFunction("NOW")
 )
 
 func (a *aggregateFunction) As(n string) *alias {
