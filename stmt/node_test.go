@@ -443,7 +443,7 @@ func TestInsertClauses(t *testing.T) {
 			wantValues: []interface{}{1, "uid1", "channel1"},
 		},
 		{
-			name: "simple values",
+			name: "multi values",
 			clause: InsertInto(
 				Channels,
 				[]Column{
@@ -469,6 +469,28 @@ func TestInsertClauses(t *testing.T) {
 			),
 			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()), (%s, %s, %s, NOW())`,
 			wantValues: []interface{}{1, "uid1", "channel1", 2, "uid2", "channel2"},
+		},
+		{
+			name: "select values",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Select(
+					Products.ChannelId,
+					Products.ChannelId,
+					Now(),
+				).
+					From(Products).
+					Where(Products.Uid.EqString("product_1")),
+			),
+			wantQuery: `INSERT INTO channels (uid, name, created_at) 
+SELECT products.channel_id, products.channel_id, NOW() 
+FROM products WHERE products.uid = %s`,
+			wantValues: []interface{}{"product_1"},
 		},
 		{
 			name: "on conflict do nothing",

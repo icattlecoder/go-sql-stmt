@@ -9,7 +9,7 @@ import (
 type insertClause struct {
 	tableName      string
 	columns        []Column
-	values         *valuesConstructor
+	values         Node
 	onConflict     bool
 	conflictTarget []Column
 	onConstraint   Node
@@ -22,13 +22,7 @@ func InsertInto(table Node, columns []Column, values Node) *insertClause {
 	c := &insertClause{
 		tableName: table.SqlString(),
 		columns:   columns,
-	}
-	if values != nil {
-		if vt, ok := values.(*valuesConstructor); ok {
-			c.values = vt
-		} else {
-			c.values = Values(values)
-		}
+		values:    values,
 	}
 	return c
 }
@@ -124,7 +118,12 @@ func (c *insertClause) SqlString() string {
 func (c *insertClause) Values() []interface{} {
 	var vs []interface{}
 	if c.values != nil {
-		vs = append(vs, c.values.Values()...)
+		switch vt := c.values.(type) {
+		case *valuesConstructor:
+			vs = append(vs, vt.Values()...)
+		case *selectClause:
+			vs = append(vs, vt.Values()...)
+		}
 	}
 	if c.onConflict && len(c.doUpdateSet) > 0 {
 		for _, v := range c.doUpdateSet {
