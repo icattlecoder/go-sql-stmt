@@ -487,7 +487,7 @@ func TestInsertClauses(t *testing.T) {
 					Now(),
 				),
 			).
-				OnConflict([]Column{Channels.Uid}).
+				OnConflict(Channels.Uid).
 				DoNothing(),
 			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()) ON CONFLICT (uid) DO NOTHING`,
 			wantValues: []interface{}{1, "uid1", "channel1"},
@@ -505,17 +505,68 @@ func TestInsertClauses(t *testing.T) {
 				Values(
 					1,
 					"uid1",
+					"channel_1",
+					Now(),
+				),
+			).
+				OnConflict(Channels.Uid).
+				DoUpdateSet(map[Column]interface{}{
+					Channels.Uid:       "uid2",
+					Channels.Name:      Channels.Name,
+					Channels.CreatedAt: Now(),
+				}).
+				Where(Channels.Name.IsNotNull()),
+			wantQuery: `INSERT INTO channels (id, uid, name, created_at) 
+VALUES (%s, %s, %s, NOW()) 
+ON CONFLICT (uid) 
+DO UPDATE SET uid = %s, name = EXCLUDED.name, created_at = NOW() 
+WHERE channels.name IS NOT NULL`,
+			wantValues: []interface{}{1, "uid1", "channel_1", "uid2"},
+		},
+		{
+			name: "on constraint",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Id,
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Values(
+					1,
+					"uid1",
 					"channel1",
 					Now(),
 				),
 			).
-				OnConflict([]Column{Channels.Uid}).
-				DoUpdateSet(map[Column]interface{}{
-					Channels.Name:      "channel2",
-					Channels.CreatedAt: Now(),
-				}),
-			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()) ON CONFLICT (uid) DO UPDATE SET name = %s, created_at = NOW()`,
-			wantValues: []interface{}{1, "uid1", "channel1", "channel2"},
+				OnConflict().
+				OnConstraint(Column("channels_uid_key")),
+			wantQuery: `INSERT INTO channels (id, uid, name, created_at) 
+VALUES (%s, %s, %s, NOW()) 
+ON CONFLICT ON CONSTRAINT channels_uid_key DO NOTHING`,
+			wantValues: []interface{}{1, "uid1", "channel1"},
+		},
+		{
+			name: "returning",
+			clause: InsertInto(
+				Channels,
+				[]Column{
+					Channels.Id,
+					Channels.Uid,
+					Channels.Name,
+					Channels.CreatedAt,
+				},
+				Values(
+					1,
+					"uid1",
+					"channel1",
+					Now(),
+				),
+			).
+				Returning(All),
+			wantQuery:  `INSERT INTO channels (id, uid, name, created_at) VALUES (%s, %s, %s, NOW()) RETURNING *`,
+			wantValues: []interface{}{1, "uid1", "channel1"},
 		},
 	}
 	for _, tt := range tests {
@@ -545,12 +596,24 @@ func TestUpdateClauses(t *testing.T) {
 				Channels,
 			).
 				Set(map[Column]interface{}{
-					Channels.Name:      "channel2",
-					Channels.CreatedAt: Now(),
+					Channels.Name: "channel2",
 				}).
 				Where(Channels.Id.EqInt(1)),
-			wantQuery:  `UPDATE channels SET name = %s, created_at = NOW() WHERE id = %s`,
+			wantQuery:  `UPDATE channels SET name = %s WHERE channels.id = %s`,
 			wantValues: []interface{}{"channel2", 1},
+		},
+		{
+			name: "returning",
+			clause: Update(
+				Channels,
+			).
+				Set(map[Column]interface{}{
+					Channels.Name: Channels.Uid,
+				}).
+				Where(Channels.Id.EqInt(1)).
+				Returning(Channels.Uid),
+			wantQuery:  `UPDATE channels SET name = uid WHERE channels.id = %s RETURNING uid`,
+			wantValues: []interface{}{1},
 		},
 	}
 	for _, tt := range tests {
@@ -580,7 +643,17 @@ func TestDeleteClauses(t *testing.T) {
 				Channels,
 			).
 				Where(Channels.Id.EqInt(1)),
-			wantQuery:  `DELETE FROM channels WHERE id = %s`,
+			wantQuery:  `DELETE FROM channels WHERE channels.id = %s`,
+			wantValues: []interface{}{1},
+		},
+		{
+			name: "using",
+			clause: DeleteFrom(
+				Channels,
+			).
+				Using(Products).
+				Where(Products.ChannelId.Eq(Channels.Id), Products.Id.EqInt(1)),
+			wantQuery:  `DELETE FROM channels USING products WHERE products.channel_id = channels.id AND products.id = %s`,
 			wantValues: []interface{}{1},
 		},
 	}

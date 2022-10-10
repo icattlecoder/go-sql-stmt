@@ -1,13 +1,12 @@
 package stmt
 
 import (
-	"strings"
-
 	"github.com/keegancsmith/sqlf"
 )
 
 type deleteClause struct {
 	tableName string
+	using     *baseClause
 	where     *baseClause
 }
 
@@ -15,6 +14,11 @@ func DeleteFrom(table Node) *deleteClause {
 	return &deleteClause{
 		tableName: table.SqlString(),
 	}
+}
+
+func (c *deleteClause) Using(n ...Node) *deleteClause {
+	c.using = newBaseClause("USING", n...).setSplit(", ")
+	return c
 }
 
 func (c *deleteClause) Where(n ...Node) *deleteClause {
@@ -29,9 +33,13 @@ func (c *deleteClause) SqlString() string {
 	sb.WriteString("DELETE FROM ")
 	sb.WriteString(c.tableName)
 
-	if c.where != nil {
-		sb.WriteString(" ")
-		sb.WriteString(strings.Replace(c.where.SqlString(), c.tableName+".", "", -1))
+	if c.using != nil && len(c.using.nodes) > 0 {
+		sb.WriteRune(' ')
+		sb.WriteString(c.using.SqlString())
+	}
+	if c.where != nil && len(c.where.nodes) > 0 {
+		sb.WriteRune(' ')
+		sb.WriteString(c.where.SqlString())
 	}
 
 	return sb.String()

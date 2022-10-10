@@ -16,8 +16,10 @@ func (c *comparisonOperator) SqlString() string {
 	defer put(sb)
 
 	sb.WriteString(c.l.SqlString())
-	sb.WriteString(" " + c.op + " ")
+	sb.WriteRune(' ')
+	sb.WriteString(c.op)
 	if c.r != nil {
+		sb.WriteRune(' ')
 		sb.WriteString(c.r.SqlString())
 	}
 	return sb.String()

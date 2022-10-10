@@ -6,18 +6,17 @@ import (
 	"strings"
 )
 
-type star string
-
-const All = star("")
-
-func (s star) SqlString() string {
-	return "*"
-}
+const All = Column("*")
 
 type Column string
 
 func (t Column) SqlString() string {
 	return string(t)
+}
+
+func (t Column) ColumnName() string {
+	sp := strings.Split(string(t), ".")
+	return sp[len(sp)-1]
 }
 
 func (t Column) As(s string) *alias {
@@ -28,8 +27,8 @@ func (t Column) Eq(r Node) Node {
 	return Equals(t, r)
 }
 
-//JsonField get json array element as text,
-//注意f可能会被注入，需要调用者保证安全性
+// JsonField get json array element as text,
+// 注意f可能会被注入，需要调用者保证安全性
 func (t Column) JsonField(f string) Node {
 	return &jsonOperator{
 		c:  t,
@@ -38,7 +37,7 @@ func (t Column) JsonField(f string) Node {
 	}
 }
 
-//JsonContainsKevValue 用于过滤json数组里面的kv
+// JsonContainsKevValue 用于过滤json数组里面的kv
 // 例如对jsonb字段 [{"round": "A", "name":"na"},{"round": "B", "name":"nb"}] 进行检索：
 // JsonContainsKeyValue(map[string]interface{}{"round":"A"})
 func (t Column) JsonContainsKevValue(kv map[string]interface{}) Node {
@@ -95,15 +94,15 @@ func (t Column) EqInt64(val int64) Node {
 }
 
 func (t Column) NotNull() Node {
-	return &comparisonOperator{op: " NOT NULL", l: t, r: nil}
+	return &comparisonOperator{op: "NOT NULL", l: t, r: nil}
 }
 
 func (t Column) IsNotNull() Node {
-	return &comparisonOperator{op: " IS NOT NULL", l: t, r: nil}
+	return &comparisonOperator{op: "IS NOT NULL", l: t, r: nil}
 }
 
 func (t Column) IsNull() Node {
-	return &comparisonOperator{op: " IS NULL", l: t, r: nil}
+	return &comparisonOperator{op: "IS NULL", l: t, r: nil}
 }
 
 func (t Column) Lt(r Node) Node {
@@ -278,4 +277,19 @@ func (t Column) Multi(n Node) *arithmeticOperator {
 
 func (t Column) SimilarTo(val string) Node {
 	return &comparisonOperator{op: "SIMILAR TO", l: t, r: newBasicTypeValue(val)}
+}
+
+func writeColumns(sb *strings.Builder, columns []Column, hasBracket bool) {
+	if hasBracket {
+		sb.WriteString("(")
+	}
+	for i, col := range columns {
+		sb.WriteString(col.ColumnName())
+		if i < len(columns)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	if hasBracket {
+		sb.WriteString(")")
+	}
 }

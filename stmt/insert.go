@@ -7,11 +7,15 @@ import (
 )
 
 type insertClause struct {
-	tableName   string
-	columns     []Column
-	values      *valuesConstructor
-	onConflict  []Column
-	doUpdateSet map[Column]interface{}
+	tableName      string
+	columns        []Column
+	values         *valuesConstructor
+	onConflict     bool
+	conflictTarget []Column
+	onConstraint   Node
+	doUpdateSet    map[Column]interface{}
+	doUpdateWhere  *baseClause
+	returning      []Column
 }
 
 func InsertInto(table Node, columns []Column, values Node) *insertClause {
@@ -29,8 +33,14 @@ func InsertInto(table Node, columns []Column, values Node) *insertClause {
 	return c
 }
 
-func (c *insertClause) OnConflict(columns []Column) *insertClause {
-	c.onConflict = columns
+func (c *insertClause) OnConflict(columns ...Column) *insertClause {
+	c.onConflict = true
+	c.conflictTarget = columns
+	return c
+}
+
+func (c *insertClause) OnConstraint(constraint Node) *insertClause {
+	c.onConstraint = constraint
 	return c
 }
 
@@ -43,6 +53,16 @@ func (c *insertClause) DoUpdateSet(setMap map[Column]interface{}) *insertClause 
 	return c
 }
 
+func (c *insertClause) Where(n ...Node) *insertClause {
+	c.doUpdateWhere = newBaseClause("WHERE", n...).setSplit(" AND ")
+	return c
+}
+
+func (c *insertClause) Returning(columns ...Column) *insertClause {
+	c.returning = columns
+	return c
+}
+
 func (c *insertClause) SqlString() string {
 	sb := get()
 	defer put(sb)
@@ -50,24 +70,33 @@ func (c *insertClause) SqlString() string {
 	sb.WriteString("INSERT INTO ")
 	sb.WriteString(c.tableName)
 
-	if c.columns != nil {
+	if len(c.columns) > 0 {
 		sb.WriteString(" ")
-		c.writeColumns(sb, c.columns)
+		writeColumns(sb, c.columns, true)
 	}
 	if c.values != nil {
 		sb.WriteString(" ")
 		sb.WriteString(c.values.SqlString())
 	}
-	if c.onConflict != nil {
-		sb.WriteString(" ON CONFLICT ")
-		c.writeColumns(sb, c.onConflict)
-		if c.doUpdateSet != nil {
+	if c.onConflict {
+		sb.WriteString(" ON CONFLICT")
+		if len(c.conflictTarget) > 0 {
+			sb.WriteRune(' ')
+			writeColumns(sb, c.conflictTarget, true)
+		}
+		if c.onConstraint != nil {
+			sb.WriteString(" ON CONSTRAINT ")
+			sb.WriteString(c.onConstraint.SqlString())
+		}
+		if len(c.doUpdateSet) > 0 {
 			sb.WriteString(" DO UPDATE SET ")
 			sets := make([]string, 0, len(c.doUpdateSet))
 			for k, v := range c.doUpdateSet {
-				set := strings.Replace(k.SqlString(), c.tableName+".", "", -1)
+				set := k.ColumnName()
 				set += " = "
 				switch vt := v.(type) {
+				case Column:
+					set += "EXCLUDED." + vt.ColumnName()
 				case Node:
 					set += vt.SqlString()
 				default:
@@ -76,9 +105,17 @@ func (c *insertClause) SqlString() string {
 				sets = append(sets, set)
 			}
 			sb.WriteString(strings.Join(sets, ", "))
+			if c.doUpdateWhere != nil && len(c.doUpdateWhere.nodes) > 0 {
+				sb.WriteRune(' ')
+				sb.WriteString(c.doUpdateWhere.SqlString())
+			}
 		} else {
 			sb.WriteString(" DO NOTHING")
 		}
+	}
+	if len(c.returning) > 0 {
+		sb.WriteString(" RETURNING ")
+		writeColumns(sb, c.returning, false)
 	}
 
 	return sb.String()
@@ -89,9 +126,11 @@ func (c *insertClause) Values() []interface{} {
 	if c.values != nil {
 		vs = append(vs, c.values.Values()...)
 	}
-	if c.onConflict != nil && c.doUpdateSet != nil {
+	if c.onConflict && len(c.doUpdateSet) > 0 {
 		for _, v := range c.doUpdateSet {
 			switch vt := v.(type) {
+			case Column:
+				// pass
 			case valueNode:
 				vs = append(vs, vt.Values()...)
 			default:
@@ -100,17 +139,6 @@ func (c *insertClause) Values() []interface{} {
 		}
 	}
 	return vs
-}
-
-func (c *insertClause) writeColumns(sb *strings.Builder, columns []Column) {
-	sb.WriteString("(")
-	for i, col := range columns {
-		sb.WriteString(strings.Replace(col.SqlString(), c.tableName+".", "", -1))
-		if i < len(columns)-1 {
-			sb.WriteString(", ")
-		}
-	}
-	sb.WriteString(")")
 }
 
 func (c *insertClause) Query() *sqlf.Query {
