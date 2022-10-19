@@ -36,4 +36,5 @@ var (
 	NotEquals     = NewComparisonOperator("!=")
 	GreaterEquals = NewComparisonOperator(">=")
 	LessEquals    = NewComparisonOperator("<=")
+	Concatenates  = NewComparisonOperator("||")
 )

@@ -279,6 +279,13 @@ func (t Column) SimilarTo(val string) Node {
 	return &comparisonOperator{op: "SIMILAR TO", l: t, r: newBasicTypeValue(val)}
 }
 
+func (t Column) Concatenates(v interface{}) Node {
+	if n, ok := v.(Node); ok {
+		return Concatenates(t, n)
+	}
+	return Concatenates(t, newBasicTypeValue(v))
+}
+
 func writeColumns(sb *strings.Builder, columns []Column, hasBracket bool) {
 	if hasBracket {
 		sb.WriteString("(")
