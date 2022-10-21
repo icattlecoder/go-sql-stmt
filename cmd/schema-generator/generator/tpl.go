@@ -5,7 +5,8 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"go/format"
+	"os"
 	"sort"
 	"strings"
 	"text/template"
@@ -82,12 +83,10 @@ func (t tables) Swap(i, j int) {
 }
 
 func GenerateFromSchema(pkg string, i, o string) error {
-
-	bs, err := ioutil.ReadFile(i)
+	bs, err := os.ReadFile(i)
 	if err != nil {
 		return fmt.Errorf("read file %s failed:%w", i, err)
 	}
-
 	var tables []table
 	if err := json.Unmarshal(bs, &tables); err != nil {
 		return err
@@ -97,7 +96,11 @@ func GenerateFromSchema(pkg string, i, o string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(o, []byte(code), 0664)
+	formatted, err := format.Source([]byte(code))
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(o, formatted, 0664)
 }
 
 func generate(pkg string, tables tables) (string, error) {
