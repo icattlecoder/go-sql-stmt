@@ -1,6 +1,7 @@
 package stmt
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/keegancsmith/sqlf"
@@ -9,6 +10,7 @@ import (
 type updateClause struct {
 	tableName string
 	setMap    map[Column]interface{}
+	setCols   []Column
 	where     *baseClause
 	returning []Column
 }
@@ -21,6 +23,13 @@ func Update(table Node) *updateClause {
 
 func (c *updateClause) Set(setMap map[Column]interface{}) *updateClause {
 	c.setMap = setMap
+	c.setCols = make([]Column, 0, len(setMap))
+	for k := range setMap {
+		c.setCols = append(c.setCols, k)
+	}
+	sort.Slice(c.setCols, func(i, j int) bool {
+		return c.setCols[i].ColumnName() < c.setCols[j].ColumnName()
+	})
 	return c
 }
 
@@ -44,8 +53,9 @@ func (c *updateClause) SqlString() string {
 	if c.setMap != nil {
 		sb.WriteString(" SET ")
 		sets := make([]string, 0, len(c.setMap))
-		for k, v := range c.setMap {
-			set := k.ColumnName()
+		for _, column := range c.setCols {
+			v := c.setMap[column]
+			set := column.ColumnName()
 			set += " = "
 			switch vt := v.(type) {
 			case Column:
@@ -74,14 +84,15 @@ func (c *updateClause) SqlString() string {
 func (c *updateClause) Values() []interface{} {
 	var vs []interface{}
 	if c.setMap != nil {
-		for _, v := range c.setMap {
+		for _, column := range c.setCols {
+			v := c.setMap[column]
 			switch vt := v.(type) {
 			case Column:
-				// pass
+				// do nothing
 			case valueNode:
 				vs = append(vs, vt.Values()...)
 			default:
-				vs = append(vs, v)
+				vs = append(vs, vt)
 			}
 		}
 	}
