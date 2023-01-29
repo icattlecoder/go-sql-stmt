@@ -98,6 +98,7 @@ LIMIT 10`,
 			clause: Select(
 				DownloadCounts.CountryCode,
 				Rank().Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)).As("year_rank"),
+				DenseRank().Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)).As("year_dense_rank"),
 				FirstValue(DownloadCounts.Count).Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)),
 				LastValue(DownloadCounts.Count).Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)),
 				NthValue(DownloadCounts.Count, 2).Over(PartitionBy(DownloadCounts.CountryCode).OrderBy(DownloadCounts.Year)),
@@ -107,6 +108,7 @@ LIMIT 10`,
 			wantQuery: `SELECT 
 download_counts.country_code, 
 Rank() OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year) AS year_rank, 
+DENSE_RANK() OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year) AS year_dense_rank, 
 FIRST_VALUE(download_counts.count) OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year), 
 LAST_VALUE(download_counts.count) OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year), 
 NTH_VALUE(download_counts.count, 2) OVER (PARTITION BY download_counts.country_code ORDER BY download_counts.year) 

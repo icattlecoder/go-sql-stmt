@@ -79,6 +79,12 @@ func RowNumber() *windowFunction {
 	}
 }
 
+func DenseRank() *windowFunction {
+	return &windowFunction{
+		function: function{Name: "DENSE_RANK"},
+	}
+}
+
 func FirstValue(n Node) *windowFunction {
 	return &windowFunction{
 		function: function{Name: "FIRST_VALUE", args: []Node{n}},
