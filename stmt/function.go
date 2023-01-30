@@ -42,13 +42,18 @@ func Coalesce(x, y Node, others ...Node) *scalarFunction {
 }
 
 type over struct {
+	keyword   string
 	partition Node
 	order     *baseClause
 }
 
 func (o *over) sqlString(sb *strings.Builder) string {
+	keyword := "OVER"
+	if o.keyword != "" {
+		keyword = o.keyword
+	}
 
-	sb.WriteString(" OVER (")
+	sb.WriteString(" " + keyword + " (")
 	if o.partition != nil {
 		sb.WriteString("PARTITION BY " + o.partition.SqlString())
 	}
@@ -85,6 +90,12 @@ func DenseRank() *windowFunction {
 	}
 }
 
+func PercentileDisc(f float64) *windowFunction {
+	return &windowFunction{
+		function: function{Name: "PERCENTILE_DISC", args: []Node{newBasicTypeValue(f)}},
+	}
+}
+
 func FirstValue(n Node) *windowFunction {
 	return &windowFunction{
 		function: function{Name: "FIRST_VALUE", args: []Node{n}},
@@ -105,6 +116,14 @@ func NthValue(n Node, nth int) *windowFunction {
 
 func (w *windowFunction) Over(n *over) *windowFunction {
 	w.over = n
+	return w
+}
+
+func (w *windowFunction) WithinGroup(orderBy Node) *windowFunction {
+	w.over = &over{
+		keyword: "WITHIN GROUP",
+		order:   newBaseClause("", orderBy).setSplit(", "),
+	}
 	return w
 }
 
