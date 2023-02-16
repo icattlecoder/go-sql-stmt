@@ -629,6 +629,19 @@ func TestUpdateClauses(t *testing.T) {
 			wantValues: []interface{}{"channel2", 1},
 		},
 		{
+			name: "with from",
+			clause: Update(
+				Channels,
+			).
+				Set(map[Column]interface{}{
+					Channels.Name: "channel2",
+				}).
+				From(Channels).
+				Where(Channels.Id.EqInt(1)),
+			wantQuery:  `UPDATE channels SET name = %s FROM channels WHERE channels.id = %s`,
+			wantValues: []interface{}{"channel2", 1},
+		},
+		{
 			name: "returning",
 			clause: Update(
 				Channels,

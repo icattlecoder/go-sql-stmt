@@ -9,7 +9,7 @@ import (
 var (
 {{range .tables}}
     // {{.TableName | firstToUpper }} is table {{.TableName}}
-    {{.TableName | firstToUpper }} =  new{{.TableName | firstToUpper}}("{{.TableName}}", "")
+    {{.TableName | firstToUpper }} =  New{{.TableName | firstToUpper}}("{{.TableName}}", "")
 {{end}}
 )
 
@@ -21,7 +21,7 @@ type {{.TableName|firstToLow}} struct{
     {{end}}
 }
 
-func new{{.TableName|firstToUpper}}(table, alias string) {{.TableName |firstToLow }} {
+func New{{.TableName|firstToUpper}}(table, alias string) {{.TableName |firstToLow }} {
      prefix := table
      if alias != "" {
          prefix = alias
@@ -39,7 +39,7 @@ func (t {{.TableName | firstToLow}}) All() []stmt.Node{
 }
 
 func (t {{.TableName | firstToLow}}) Alias(n string) {{.TableName|firstToLow}}{
-	return new{{.TableName|firstToUpper}}(t.table, n)
+	return New{{.TableName|firstToUpper}}(t.table, n)
 }
 
 func (t {{.TableName | firstToLow}}) SortableColumns(columns ...string)(n []stmt.Node){

@@ -11,6 +11,7 @@ type updateClause struct {
 	tableName string
 	setMap    map[Column]interface{}
 	setCols   []Column
+	from      *from
 	where     *baseClause
 	returning []Column
 }
@@ -30,6 +31,11 @@ func (c *updateClause) Set(setMap map[Column]interface{}) *updateClause {
 	sort.Slice(c.setCols, func(i, j int) bool {
 		return c.setCols[i].ColumnName() < c.setCols[j].ColumnName()
 	})
+	return c
+}
+
+func (c *updateClause) From(n Node) *updateClause {
+	c.from = &from{sources: n}
 	return c
 }
 
@@ -68,6 +74,10 @@ func (c *updateClause) SqlString() string {
 			sets = append(sets, set)
 		}
 		sb.WriteString(strings.Join(sets, ", "))
+	}
+	if c.from != nil {
+		sb.WriteRune(' ')
+		sb.WriteString(c.from.SqlString())
 	}
 	if c.where != nil && len(c.where.nodes) > 0 {
 		sb.WriteRune(' ')
