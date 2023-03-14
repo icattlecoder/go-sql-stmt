@@ -13,11 +13,13 @@ var (
 	schema string
 	output string
 	pkg    string
+	cmd    string
 )
 
 func init() {
 	flag.StringVar(&schema, "i", "schema.json", "schema json path")
 	flag.StringVar(&output, "o", "schema.go", "output schema go path")
+	flag.StringVar(&cmd, "c", "schema", "生成器")
 	flag.StringVar(&pkg, "p", "", "output package name, default to sub path of output")
 }
 
@@ -34,7 +36,13 @@ func main() {
 		})
 		_, pkg = filepath.Split(dir)
 	}
-	if err := generator.GenerateFromSchema(pkg, schema, output); err != nil {
+	if cmd == "schema" {
+		if err := generator.GenerateSchemaFromSchema(pkg, schema, output); err != nil {
+			log.Fatalf("generate schema failed: %v, pkg: %s, schema: %s, output: %s", err, pkg, schema, output)
+		}
+		return
+	}
+	if err := generator.GenerateGoProtoFromSchema(pkg, schema, output); err != nil {
 		log.Fatalf("generate schema failed: %v, pkg: %s, schema: %s, output: %s", err, pkg, schema, output)
 	}
 }

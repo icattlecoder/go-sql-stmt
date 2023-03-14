@@ -17,7 +17,12 @@ import (
 //go:embed tmpl.tpl
 var tplString string
 
-var tpl *template.Template
+var schemaTpl *template.Template
+
+//go:embed go-proto-tmpl.tpl
+var goProtoTplString string
+
+var goProtoTpl *template.Template
 
 func firstToLow(s string) string {
 	s = strcase.LowerCamelCase(s)
@@ -37,33 +42,60 @@ func firstToUpper(s string) string {
 
 func init() {
 
-	tpl1, err := template.New("").Funcs(template.FuncMap{
+	tpl1, err := template.New("t1").Funcs(template.FuncMap{
 		"firstToLow":   firstToLow,
 		"firstToUpper": firstToUpper,
 	}).Parse(tplString)
 	if err != nil {
 		panic("should never happen: " + err.Error())
 	}
-	tpl = tpl1
+	schemaTpl = tpl1
+
+	tpl1, err = template.New("t2").Funcs(template.FuncMap{
+		"firstToLow":   firstToLow,
+		"firstToUpper": firstToUpper,
+	}).Parse(goProtoTplString)
+	if err != nil {
+		panic("should never happen: " + err.Error())
+	}
+	goProtoTpl = tpl1
 }
 
 type Column struct {
 	Name     string `json:"name"`
+	Update   bool   `json:"update,omitempty"`
+	GoType   string `json:"gotype,omitempty"`
 	Sortable bool   `json:"sortable,omitempty"`
+	Comment  string `json:"comment"`
+	Tag      string `json:"tag"`
 }
 
 type table struct {
 	TableName   string   `json:"table"`
+	HasUpdateAt bool     `json:"hasUpdateAt"`
+	Update      bool     `json:"-"`
 	HasSortable bool     `json:"-"`
 	Columns     []Column `json:"columns"`
 }
 
 func (t *table) preDo() {
 
-	for _, c := range t.Columns {
+	for i, _ := range t.Columns {
+		c := &t.Columns[i]
+		if c.Tag == "" {
+			c.Tag = fmt.Sprintf(`json:"%s"`, c.Name)
+		}
+		if c.GoType == "" {
+			c.GoType = "interface{}"
+		}
 		if c.Sortable {
 			t.HasSortable = true
-			break
+		}
+		if c.Update {
+			t.Update = true
+			if c.GoType == "" {
+				c.GoType = "interface{}"
+			}
 		}
 	}
 }
@@ -82,7 +114,7 @@ func (t tables) Swap(i, j int) {
 	t[i], t[j] = t[j], t[i]
 }
 
-func GenerateFromSchema(pkg string, i, o string) error {
+func GenerateSchemaFromSchema(pkg string, i, o string) error {
 	bs, err := os.ReadFile(i)
 	if err != nil {
 		return fmt.Errorf("read file %s failed:%w", i, err)
@@ -92,7 +124,7 @@ func GenerateFromSchema(pkg string, i, o string) error {
 		return err
 	}
 
-	code, err := generate(pkg, tables)
+	code, err := generate(schemaTpl, pkg, tables)
 	if err != nil {
 		return err
 	}
@@ -103,7 +135,29 @@ func GenerateFromSchema(pkg string, i, o string) error {
 	return os.WriteFile(o, formatted, 0664)
 }
 
-func generate(pkg string, tables tables) (string, error) {
+func GenerateGoProtoFromSchema(pkg string, i, o string) error {
+	bs, err := os.ReadFile(i)
+	if err != nil {
+		return fmt.Errorf("read file %s failed:%w", i, err)
+	}
+	var tables []table
+	if err := json.Unmarshal(bs, &tables); err != nil {
+		return err
+	}
+
+	code, err := generate(goProtoTpl, pkg, tables)
+	if err != nil {
+		return err
+	}
+	formatted, err := format.Source([]byte(code))
+	if err != nil {
+		fmt.Println(code)
+		return err
+	}
+	return os.WriteFile(o, formatted, 0664)
+}
+
+func generate(tpl *template.Template, pkg string, tables tables) (string, error) {
 
 	sort.Sort(tables)
 	for i := range tables {
@@ -114,6 +168,7 @@ func generate(pkg string, tables tables) (string, error) {
 		"package":     pkg,
 		"tables":      tables,
 	}
+	//fmt.Println(data)
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, data); err != nil {
