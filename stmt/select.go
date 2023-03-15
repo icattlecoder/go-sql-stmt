@@ -17,12 +17,19 @@ type selectClause struct {
 	orderBy *baseClause
 	limit   *limitOffset
 	offset  *limitOffset
+	sub     string
 }
 
 func Select(n ...Node) *selectClause {
 	return &selectClause{
 		_select: newBaseClause("SELECT", n...),
 	}
+}
+
+// SubQuery 将当前查询作为子查询
+func (c *selectClause) SubQuery(n string) *selectClause {
+	c.sub = n
+	return c
 }
 
 func (c *selectClause) From(sources ...Node) *selectClause {
@@ -146,6 +153,11 @@ func (c *selectClause) SqlString() string {
 		if i < len(bs)-1 {
 			sb.WriteString(" ")
 		}
+	}
+
+	if c.sub != "" {
+		return fmt.Sprintf("(%s) %s", sb.String(), c.sub)
+
 	}
 	return sb.String()
 }
