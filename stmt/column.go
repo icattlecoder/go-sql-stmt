@@ -265,6 +265,16 @@ func (t Column) Plus(n Node) *arithmeticOperator {
 	}
 }
 
+func (t Column) Minus(n Node) *arithmeticOperator {
+	return &arithmeticOperator{
+		source: t,
+		items: []*arithmeticOperator{{
+			op:     "-",
+			source: n,
+		}},
+	}
+}
+
 func (t Column) Multi(n Node) *arithmeticOperator {
 	return &arithmeticOperator{
 		source: t,

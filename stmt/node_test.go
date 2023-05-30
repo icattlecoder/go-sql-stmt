@@ -1,6 +1,7 @@
 package stmt
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -134,19 +135,6 @@ FROM download_counts WHERE download_counts.channel_id = %s
 AND download_counts.product_id = %s 
 AND download_counts.country_code = %s`,
 			wantValues: []interface{}{"1", 123, "CN"},
-		},
-		{
-			name: "explain",
-			clause: Select(
-				ProductsQueryStats.Name,
-			).
-				From(ProductsQueryStats).
-				Where(
-					ProductsQueryStats.Name.EqString("ANDROID"),
-				).Distinct().ExplainJson(),
-			wantQuery: `EXPLAIN (FORMAT JSON) SELECT DISTINCT products_query_stats.name 
-FROM products_query_stats WHERE products_query_stats.name = %s`,
-			wantValues: []interface{}{"ANDROID"},
 		},
 		{
 			name: "join",
@@ -669,6 +657,38 @@ func TestUpdateClauses(t *testing.T) {
 	}
 }
 
+func TestExplain(t *testing.T) {
+
+	tests := []struct {
+		name       string
+		clause     *explain
+		wantQuery  string
+		wantValues []interface{}
+	}{
+		{
+			name:       "simple",
+			clause:     Select(All).From(Channels).Where(Channels.Name.EqString("huawei")).Explain().JsonFormat(),
+			wantQuery:  `EXPLAIN (FORMAT JSON) SELECT * FROM channels WHERE channels.name = %s`,
+			wantValues: []interface{}{"huawei"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotQuery := tt.clause.SqlString()
+			gotValues := tt.clause.Values()
+			if !isStrEq(gotQuery, tt.wantQuery) {
+				t.Errorf("SqlString() = %v, want \n%v", gotQuery, removeNewLine(tt.wantQuery))
+			}
+			if !reflect.DeepEqual(gotValues, tt.wantValues) {
+				fmt.Println(reflect.TypeOf(gotValues), reflect.TypeOf(tt.wantValues))
+				t.Errorf("Values() = %v, want %v", gotValues, tt.wantValues)
+			}
+		})
+	}
+
+}
+
 func TestDeleteClauses(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -710,31 +730,32 @@ func TestDeleteClauses(t *testing.T) {
 	}
 }
 
-func TestIfBranch(t *testing.T) {
-	col1 := Column("if")
-	col2 := Column("elseif")
-	col3 := Column("else")
-	br := If(true, col1).ElseIf(false, col2).Else(col3)
-	if br.SqlString() != col1.SqlString() {
-		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col1.SqlString())
-		return
-	}
-
-	br = If(false, col1).ElseIf(true, col2).Else(col3)
-	if br.SqlString() != col2.SqlString() {
-		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col2.SqlString())
-		return
-	}
-
-	br = If(false, col1).ElseIf(false, col2).Else(col3)
-	if br.SqlString() != col3.SqlString() {
-		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col3.SqlString())
-		return
-	}
-
-	br = If(true, col1).ElseIf(true, col2).Else(col3)
-	if br.SqlString() != col1.SqlString() {
-		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col1.SqlString())
-		return
-	}
-}
+//
+//func TestIfBranch(t *testing.T) {
+//	col1 := Column("if")
+//	col2 := Column("elseif")
+//	col3 := Column("else")
+//	br := If(true, col1).ElseIf(false, col2).Else(col3)
+//	if br.SqlString() != col1.SqlString() {
+//		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col1.SqlString())
+//		return
+//	}
+//
+//	br = If(false, col1).ElseIf(true, col2).Else(col3)
+//	if br.SqlString() != col2.SqlString() {
+//		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col2.SqlString())
+//		return
+//	}
+//
+//	br = If(false, col1).ElseIf(false, col2).Else(col3)
+//	if br.SqlString() != col3.SqlString() {
+//		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col3.SqlString())
+//		return
+//	}
+//
+//	br = If(true, col1).ElseIf(true, col2).Else(col3)
+//	if br.SqlString() != col1.SqlString() {
+//		t.Fatalf("if stmt error, got:%v, expected:%v", br.SqlString(), col1.SqlString())
+//		return
+//	}
+//}

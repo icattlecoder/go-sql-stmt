@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fork-ai/go-sql-stmt/cmd/schema-generator/generator"
+	"github.com/icattlecoder/go-sql-stmt/cmd/schema-generator/generator"
 )
 
 var (

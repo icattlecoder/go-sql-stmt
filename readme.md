@@ -3,13 +3,13 @@
 [TOC]
 
 ## What
-sql-stmt库是使用go函数来构建sql语句。
+go-sql-stmt 库是使用go函数来构建 SQL 语句。
 
 类似的项目有: 
 - https://github.com/huandu/go-sqlbuilder
 - https://github.com/knex/knex
 
-sql-stmt在使用上更加方便，文法更接近原生的sql。通过If语句也可以现实条件生成sql语句。
+go-sql-stmt 在使用上更加方便，文法更接近原生的sql。通过If语句也可以现实条件生成 SQL 语句。
 
 ## Example
 
@@ -17,7 +17,7 @@ sql-stmt在使用上更加方便，文法更接近原生的sql。通过If语句�
 
 ## 定义 Schema
 
-使用sql-stmt的第一步是定义Schema，Schema是一个结构体，它的成员字段表示数据库的列。
+使用 go-sql-stmt 的第一步是定义 Schema，Schema是一个结构体，它的成员字段表示数据表的列。
 可以根据json格式的schema定义来生成go struct
 
 ```javascript
@@ -33,18 +33,18 @@ sql-stmt在使用上更加方便，文法更接近原生的sql。通过If语句�
 }]
 ```
 
-如果schema.json在当前路径，直接运行schema-generator （`go install github.com/fork-ai/go-sql-stmt`）
+如果schema.json在当前路径，直接运行schema-generator （`go install github.com/icattlecoder/go-sql-stmt`）
 
 ```go
 //go:generate schema-generator
 ```
 
-生成文件schema.go文件
+生成文件 schema.go 文件
 
 ```go
 package db
 
-import "github.com/fork-ai/go-sql-stmt/stmt"
+import "github.com/icattlecoder/go-sql-stmt/stmt"
 
 var (
 	// Channels is table channels
@@ -91,13 +91,13 @@ ORDER BY download_counts.product_id, download_counts.year DESC
 OFFSET 100
 ```
 
-如果使用sql-stmt进行构造，代码如下:
+如果使用 go-sql-stmt 进行构造，代码如下:
 
 ```go
 package main
 
 import (
-	. "github.com/fork-ai/go-sql-stmt/stmt"
+	. "github.com/icattlecoder/go-sql-stmt/stmt"
 )
 
 func main() {
@@ -116,7 +116,8 @@ func main() {
 ```
 
 2. 明确的变量引用，不需要通过Printf来手动对齐占位符与变量。 例如上例中，ChannelId添加了 `channel_id=1`的限制。
-3. 支持条件语句 有时我们会根据用户的输入值来添加Where子句中的限定，如果使用sql字符串拼接，则整个sql会被切割打散，这样的代码不易维护,例如
+
+3. 支持条件语句 有时我们会根据用户的输入值来添加 Where 子句中的限定，如果使用 sql 字符串拼接，则整个 sql 会被切割打散，这样的代码不易维护,例如
 
 ```go
 package main
@@ -157,13 +158,13 @@ LIMIT %d OFFSET %d`)
 }
 ```
 
-下面使用sql-stmt来重构这段代码
+下面使用 go-sql-stmt 来重构这段代码
 
 ```go
 package main
 
 import (
-	. "github.com/fork-ai/go-sql-stmt/stmt"
+	. "github.com/icattlecoder/go-sql-stmt/stmt"
 )
 
 type ProductsRankOptions struct {

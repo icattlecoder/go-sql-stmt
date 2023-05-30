@@ -20,12 +20,6 @@ var (
 	// ProductsQueryStats is table products_query_stats
 	ProductsQueryStats = newProductsQueryStats("products_query_stats", "")
 
-	// ProductsQueryStatsTmp is table products_query_stats_tmp
-	ProductsQueryStatsTmp = newProductsQueryStatsTmp("products_query_stats_tmp", "")
-
-	// ServicesStats is table services_stats
-	ServicesStats = newServicesStats("services_stats", "")
-
 	// DownloadCounts is table download_counts
 	DownloadCounts = newDownloadCounts("download_counts", "")
 )

@@ -168,7 +168,6 @@ func generate(tpl *template.Template, pkg string, tables tables) (string, error)
 		"package":     pkg,
 		"tables":      tables,
 	}
-	//fmt.Println(data)
 
 	buff := bytes.Buffer{}
 	if err := tpl.Execute(&buff, data); err != nil {

@@ -2,7 +2,6 @@ package stmt
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/keegancsmith/sqlf"
 )
@@ -91,10 +90,10 @@ func (c *selectClause) Limit(size int) *selectClause {
 	return c
 }
 
-func (c *selectClause) ExplainJson() *selectClause {
-	nc := *c
-	nc.explain = &explain{Explain{Format: "JSON"}}
-	return &nc
+func (c *selectClause) Explain() *explain {
+	return &explain{
+		sel: c,
+	}
 }
 
 func (c *selectClause) Distinct() *selectClause {
@@ -240,40 +239,6 @@ type limitOffset struct {
 
 func (l *limitOffset) SqlString() string {
 	return l.label + fmt.Sprintf(" %d", l.val)
-}
-
-type Explain struct {
-	//TEXT, XML, JSON, YAML
-	Format string
-}
-
-var validFormats = map[string]struct{}{
-	"XML":  {},
-	"JSON": {},
-	"YAML": {},
-}
-
-type explain struct {
-	Explain
-}
-
-func (e *explain) SqlString() string {
-	sb := get()
-	defer put(sb)
-
-	sb.WriteString("EXPLAIN")
-
-	var opts []string
-	if _, ok := validFormats[e.Format]; ok {
-		opts = append(opts, fmt.Sprintf("FORMAT %s", e.Format))
-	}
-
-	if len(opts) > 0 {
-		sb.WriteString(" (")
-		sb.WriteString(strings.Join(opts, ","))
-		sb.WriteString(")")
-	}
-	return sb.String()
 }
 
 type orderDirection struct {
